@@ -1,0 +1,38 @@
+---
+title: "DahnYoung_Final"
+author: "Dahn-Young Dong"
+date: "9/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Title of my project
+
+## Introduction and Goals
+
+The goal of my project is to answer the question, What is...?
+
+The methods I will use to do this are...
+
+The data I will use are (my own data/ data publicly available at YYY/ simulations)
+
+## Methods
+
+The tools I used were... See analysis files at (links to analysis files).
+
+## Results
+
+The tree in Figure 1...
+
+## Discussion
+
+These results indicate...
+
+The biggest difficulty in implementing these analyses was...
+
+If I did these analyses again, I would...
+
+## References
