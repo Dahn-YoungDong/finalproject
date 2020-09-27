@@ -9,6 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Each student will conduct their own phylogenetic study, which could include development of a new method, reconstructing the phylogeny of a particular group of organisms, examining the evolution of one more more characters on a phylogeny, or examination of the behavior of a particular phylogenetic method. The professor and other students will review the project as it is developed so that it can be iteratively improved, tested, and refined. At the end of the course, each student will record a video (about 10 minutes long) about the project to share with the class, and in the last days of class each student will lead a discussion of their project for 5-10 minutes. The points for the final project will not be awarded all at once, but cumulatively over the semester:
+
+5% in Week 6 for the project proposal. The project proposal consists of filling out the "Introduction and Goals" section, which specifies the question to be addressed, the methods to be applied, and the data (if any) to be considered.
+5% in Week 9 for the project minimum viable analysis, a worked example that shows how all the concepts and tools will be connected.
+10% for the recorded presentation to be shown in the last class. The recording of the presentation is due right after November recess. It is expected that this presentation covers the nearly complete project and that all major analyses are done. Presentation grade will reflect both the delivery of the material, as well as the state and quality of the work in the repository.
+15% for the completed project, due by the end of reading period. The time between the presentation and submission of the final project should be used to polish remaining small issues and to incorporate feedback provided after the the presentation.
+
 # Title of my project
 
 ## Introduction and Goals
