@@ -20,15 +20,26 @@ Some guidelines and tips:
 
 OK, here we go.
 
-# Title of my project
+# Population tree construction and spatially-explicit admixture mapping
 
 ## Introduction and Goals
 
-The goal of my project is to answer the question, What is...?
+Yale Myer’s Forests (YMF) in northeastern Connecticut has distributions of populations of wood frogs (*Rana sylvatica*), and Skelly's lab has been recording long-term population dynamics, phenotypic and abiotic environment data that show rapid evolution is occurring (Freidenburg and Skelly, 2004; Skelly, 2004; Ligon and Skelly, 2009). That is, the populations are diverging in their physiological and morphological traits based on the local environments over generations. What requires to substantiate this ecological observation further is to explore the genetics. Previous effort to study microsatellite markers have not been successful in showing the population divergence or clustering at such microgeographical scale. 
 
-The methods I will use to do this are...
 
-The data I will use are (my own data/ data publicly available at YYY/ simulations)
+With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, few questions arise:
+1. how are these populations related to each other phylogenetically, 
+2. which groups are older lineages and which groups are later colonized (admixture),
+3. what is the spatial pattern of current population distribution and colonial history, and is there a clear narrative?
+
+My collaborator A. Z. Andis Arietta did the collection, filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 277 individual SNP sequences from 41 populations at focal site, YMF, and then three outgroup populations from New Haven Co. and Guilford Co. Connecticut. The are a few things and related methods I will need to approach my questions.
+
+1. Access and view the dataset (Rstudio, High-Computing Cluster Platform)
+2. Population tree-building and visualization (IQtree), which involves naming convention changes, evolution model selection and parameterization, tree model evaluation, and annotation
+3. Spatial mapping of population with phylogenetic and genotype proportion information (using package "gstudio")
+4. Genetic neighbor analysis and admixture analysis
+
+Completion of 1 and 2 would be satisfactory for my final project, inclusion of successful anaslysis for 3 would be well done. And possible attempt for 4 would be extraordinary.
 
 ## Methods
 
@@ -48,3 +59,8 @@ If I did these analyses again, I would...
 
 ## References
 
+Freidenburg, L. K., and Skelly, D. K. (2004). Microgeographical variation in thermal preference by an amphibian. Ecol. Lett. 7, 369–373. doi:10.1111/j.1461-0248.2004.00587.x.
+
+Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient variation in the wood frog. Evol. Ecol. Res. 11, 1099–1109.
+
+Skelly, D. K. (2004). Microgeographic countergradient variation in the wood frog, Rana sylvatica. Evolution 58, 160–165. doi:10.1111/j.0014-3820.2004.tb01582.x.
