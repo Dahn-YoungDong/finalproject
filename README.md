@@ -35,11 +35,11 @@ With the availability of genome-wide SNPs for a few dozens of populations of *Ra
 My collaborator A. Z. Andis Arietta did the collection, filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 277 individual SNP sequences from 41 populations at focal site, YMF, and then three outgroup populations from New Haven Co. and Guilford Co. Connecticut. The are a few things and related methods I will need to approach my questions.
 
 1. Access and view the dataset (Rstudio, High-Computing Cluster Platform)
-2. Population tree-building and visualization (IQtree), which involves naming convention changes, evolution model selection and parameterization, tree model evaluation, and annotation
+2. Population tree-building, manipulation and visualization (IQtree, ape package and ggtree), which involves data type change, naming convention changes, evolution model selection and parameterization, tree model evaluation, and annotation, etc.
 3. Spatial mapping of population with phylogenetic and genotype proportion information (using package "gstudio")
-4. Genetic neighbor analysis and admixture analysis
+4. Genetic neighbor analysis and admixture analysis (using independent softwares: splitstree4 and TreeMix, unless other R packages are found)
 
-Completion of 1 and 2 would be satisfactory for my final project, inclusion of successful anaslysis for 3 would be well done. And possible attempt for 4 would be extraordinary.
+Completion of 1 and 2 would be satisfactory for my final project; inclusion of successful analysis for 3 would be well done; possible attempt for 4 would be extraordinary.
 
 ## Methods
 
@@ -61,6 +61,6 @@ If I did these analyses again, I would...
 
 Freidenburg, L. K., and Skelly, D. K. (2004). Microgeographical variation in thermal preference by an amphibian. Ecol. Lett. 7, 369–373. doi:10.1111/j.1461-0248.2004.00587.x.
 
-Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient variation in the wood frog. Evol. Ecol. Res. 11, 1099–1109.
+Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient variation in the wood frog. Evol. Ecol. Res. 11, 1099–1109. http://www.evolutionary-ecology.com/issues/v11/n07/jjar2510.pdf
 
 Skelly, D. K. (2004). Microgeographic countergradient variation in the wood frog, Rana sylvatica. Evolution 58, 160–165. doi:10.1111/j.0014-3820.2004.tb01582.x.
