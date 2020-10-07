@@ -34,7 +34,7 @@ With the availability of genome-wide SNPs for a few dozens of populations of *Ra
 
 My collaborator A. Z. Andis Arietta did the collection, filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 277 individual SNP sequences from 41 populations at focal site, YMF, and then three outgroup populations from New Haven Co. and Guilford Co. Connecticut. The are a few things and related methods I will need to approach my questions.
 
-1. Access and view the dataset (Rstudio, High-Computing Cluster Platform)
+1. Access and view the dataset (Rstudio, High-Computing Cluster Platform, mesquite and/or MView)
 2. Population tree-building, manipulation and visualization (IQtree, ape package and ggtree), which involves data type change, naming convention changes, evolution model selection and parameterization, tree model evaluation, and annotation, etc.
 3. Spatial mapping of population with phylogenetic and genotype proportion information (using package "gstudio")
 4. Genetic neighbor analysis and admixture analysis (using independent softwares: splitstree4 and TreeMix, unless other R packages are found)
