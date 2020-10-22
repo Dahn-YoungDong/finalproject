@@ -1,0 +1,22 @@
+---
+title: "Minimum viable analysis"
+author: "Dahn-Young Dong"
+date: "10/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Mimimum Viable Analysis of - Population tree construction and spatially-explicit admixture mapping
+
+Generally not from a wheel, to bottom, to whole car... but from a skateboard, scooter, to bike, to car... each is a self-contained with instant gratification...
+really big input data: 1. long time analysis 2. challenging to work with. 3. minimal possible dataset to approach the question.
+
+Use Pilot dataset of 17 individuals to...
+
+### GSTUDIO- genetic proportions onto map
+
+
+### PhyloNet- to build a consensus introgression tree, if the populations evolve tree-like at all
