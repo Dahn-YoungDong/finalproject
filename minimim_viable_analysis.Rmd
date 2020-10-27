@@ -16,7 +16,22 @@ really big input data: 1. long time analysis 2. challenging to work with. 3. min
 
 Use Pilot dataset of 17 individuals to...
 
+```{r}
+require(gstudio)
+require(vcfR)
+require(pegas)
+```
+
 ### GSTUDIO- genetic proportions onto map
 
+```{r}
+#import
+pilot.loci <- pegas::read.vcf("./input/rasy_ymf_main.vcf", from = 10000, to = 10999)
+#reuiqre output
+write.csv(pilot.loci, "./output/pilot.loci")
+#use gstudio::read pop
+pilot.pop <- gstudio::read_population("./output/pilot.loci", header = TRUE, type = "separated", locus.columns = 1:1000, delim = "/") #trouble
+```
+```
 
 ### PhyloNet- to build a consensus introgression tree, if the populations evolve tree-like at all
