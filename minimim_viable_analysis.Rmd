@@ -9,29 +9,29 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Mimimum Viable Analysis of - Population tree construction and spatially-explicit admixture mapping
+# Mimimum Viable Analysis
 
-Generally not from a wheel, to bottom, to whole car... but from a skateboard, scooter, to bike, to car... each is a self-contained with instant gratification...
-really big input data: 1. long time analysis 2. challenging to work with. 3. minimal possible dataset to approach the question.
+Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, the ones related to manipulating and visualizing genetic data given spatial coordintaes
 
-Use Pilot dataset of 17 individuals to...
 
+### load package if needed
 ```{r}
-require(gstudio)
-require(vcfR)
-require(pegas)
+#require(gstudio)
 ```
 
-### GSTUDIO- genetic proportions onto map
+### Follow LandGen Pipeline
+
+```{r}
+# THE FILE ".CSV" WITH THE GEOGRAPHICAL INFORMATION OF GENETIC SAMPLES IN DECIMALS DEGREES PREFERENCIALLY AND ONE COLUMN WITH LOCALITIES IDs. DIFFERENT INDIVIDUALS MUST HAVE DIFFERENT COORDINATES. IF TWO OR MORE SAMPLES WERE COLLECTED IN THE SAME LOCALITY, CHANGE THE VALUE OF 4TH OR 5TH DECIMAL NUMBER TO SET A DIFFERENCE OF 1 OR 5 METERS. SOME ANALYSES COULD RETURN ERRORS IF THE DIFFERENCES IN METERS BETWEEN INDIVIDUALS IS 0. -- somehow jitter the last digits
+name_longlat <- read.csv("coords/YMF2018_RASYpopgen_sampleinfo.csv", as.is = TRUE)[,c(1:2,6,13:14)]
+
+#shuffle column names to include trim name that match to name_longlat "extract" elements
+```
+
 
 ```{r}
 #import
 pilot.loci <- pegas::read.vcf("./input/rasy_ymf_main.vcf", from = 10000, to = 10999)
-#reuiqre output
-write.csv(pilot.loci, "./output/pilot.loci")
-#use gstudio::read pop
-pilot.pop <- gstudio::read_population("./output/pilot.loci", header = TRUE, type = "separated", locus.columns = 1:1000, delim = "/") #trouble
-```
 ```
 
 ### PhyloNet- to build a consensus introgression tree, if the populations evolve tree-like at all
