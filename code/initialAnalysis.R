@@ -1,13 +1,21 @@
 #see if I can load data into gstudio
 
-library(ILovePackages)
-
-mypak(c("gstudio","pegas", "adegenet", "vcfR", "devtools","ade4" , "spdep",
-        "adehabitat", "vegan","dplyr","MASS"))
+require(gstudio)
+require(pegas)
+require(adegenet)
+require(vcfR)
+require(devtools)
+require(ade4)
+require(spdep)
+require(vegan)
+require(dplyr)
+require(MASS)
 
 ## SPECIFY DATA FILES ##
-VCFFILE <- "data/myersPopGen_main_094.vcf"
-INDDATA <- "data/YMF2018_RASYpopgen_sampleinfo.csv"
+VCFFILE <- "large.data/rasy_ymf_main.vcf"
+# VCFFILE <- "vcf/myersPopGen_main_094.vcf"
+#/home/nbe4//project/myersPopStructure/0.assembleClusters/main_smallRamp/myersPopGen_main_094_outfiles/myersPopGen_main_094.vcf
+INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
 
 ## READ AND TIDY DATA ##
 frogVariants <- vcfR::read.vcfR(VCFFILE, checkFile = T,verbose = T)
