@@ -34,12 +34,10 @@ With the availability of genome-wide SNPs for a few dozens of populations of *Ra
 
 My collaborator A. Z. Andis Arietta did the collection, filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 277 individual SNP sequences from 41 populations at focal site, YMF, and then three outgroup populations from New Haven Co. and Guilford Co. Connecticut. The are a few things and related methods I will need to approach my questions.
 
-1. Access and view the large genomic dataset (Rstudio, High-Computing Cluster Platform, mesquite and/or MView?)
-2. Population tree-building, manipulation and visualization (IQtree, ape package and ggtree), which involves data type change, naming convention changes, evolution model selection and parameterization, tree model evaluation, and annotation, etc.
-3. Spatial mapping of population with phylogenetic and genotype proportion information (using package "gstudio")
-4. Genetic neighbor analysis and admixture analysis (using independent softwares: splitstree4 and TreeMix, unless other R packages are found)
+1. Use program TreeMix to make inference of patterns of population splitting and mixing from genomewide allele frequency data 
+2. Spatially visualizing genetic clusters with maps of population admixture coefficients
 
-Completion of 1 and 2 would be satisfactory for my final project; inclusion of successful analysis for 3 would be well done; possible attempt for 4 would be extraordinary.
+Completion of 1 would be satisfactory for my final project; inclusion of successful analysis for 2 would be well done
 
 ## Methods
 
@@ -64,3 +62,11 @@ Freidenburg, L. K., and Skelly, D. K. (2004). Microgeographical variation in the
 Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient variation in the wood frog. Evol. Ecol. Res. 11, 1099–1109. http://www.evolutionary-ecology.com/issues/v11/n07/jjar2510.pdf
 
 Skelly, D. K. (2004). Microgeographic countergradient variation in the wood frog, Rana sylvatica. Evolution 58, 160–165. doi:10.1111/j.0014-3820.2004.tb01582.x.
+
+Narasimhan, V., Danecek, P., Scally, A., Xue, Y., Tyler-Smith, C., & Durbin, R. (2016). BCFtools/RoH: a hidden Markov model approach for detecting autozygosity from next-generation sequencing data. Bioinformatics, 32(11), 1749-1751.
+
+Team, R. C. (2017). R: a language and environment for statistical computing. R Foundation for Statistical Computing, Vienna. http s. www. R-proje ct. org.
+
+Purcell, S., Neale, B., Todd-Brown, K., Thomas, L., Ferreira, M. A., Bender, D., ... & Sham, P. C. (2007). PLINK: a tool set for whole-genome association and population-based linkage analyses. The American journal of human genetics, 81(3), 559-575.
+
+Pickrell, J. K., & Pritchard, J. K. (2012). Supplementary Material for: Inference of population splits and mixtures from genome-wide allele frequency data.
