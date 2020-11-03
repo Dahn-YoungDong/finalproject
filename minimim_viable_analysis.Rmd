@@ -2,7 +2,7 @@
 title: "Minimum viable analysis"
 author: "Dahn-Young Dong"
 date: "10/22/2020"
-output: html_document
+output: rmarkdown::github_document
 ---
 
 ```{r setup, include=FALSE}
