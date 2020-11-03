@@ -12,7 +12,7 @@ require(dplyr)
 require(MASS)
 
 ## SPECIFY DATA FILES ##
-VCFFILE <- "large.data/rasy_ymf_main.vcf"
+VCFFILE <- "vcf/rasy_ymf_main.vcf"
 # VCFFILE <- "vcf/myersPopGen_main_094.vcf"
 #/home/nbe4//project/myersPopStructure/0.assembleClusters/main_smallRamp/myersPopGen_main_094_outfiles/myersPopGen_main_094.vcf
 INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"

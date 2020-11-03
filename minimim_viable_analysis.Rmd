@@ -28,22 +28,31 @@ For I:
 
 I have tried running TreeMix on my local computer but too many dependencies I have not downloaded and I hit trouble running proper version of Java when I was installing Nextflow which runs vcf2treemix 
 
-I tried running TreeMix over Yale HPC Grace but it returned error
+I tried running TreeMix over Yale HPC Grace but it returned error. I just asked HPC and they told me how to run TreeMix in the cluster.
 
-EnvironmentNotWritableError: The current user does not have write permissions to the target environment.
-  environment location: /gpfs/loomis/apps/avx/software/miniconda/4.8.3
-  uid: 17242
-  gid: 11199
-  
 For II: I am figuring out how to use regular expression to match the sample names in order to run the pipeline. 
 
 ### Spatially visualizing genetic clusters with maps of population admixture coefficients
 
 ```{r}
-VCFFILE <- "large.data/rasy_ymf_main.vcf"
-INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
+#load package
+library(pegas)
+library(adegenet)
+library(vcfR)
+library(devtools)
+library(ade4)
+library(spdep)
+library(vegan)
+library(dplyr)
+library(MASS)
+library(sf)
+```
 
-# Cleaning data
+```{r}
+INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
+frogGenind <- load("frogGenind.Rdata")
+
+# Cleaning data (code borrowed from Nate Edelman)
 getGoodID <- function(x){
   parts=unlist(strsplit(x,"_"))
   goodParts=parts[parts!="YNL"]
@@ -64,20 +73,75 @@ sampleInObject <- sampleData[sampleData$sampleName %in% validIDs,]
 ```
 
 ```{r}
-# THE FILE ".CSV" WITH THE GEOGRAPHICAL INFORMATION OF GENETIC SAMPLES IN DECIMALS DEGREES PREFERENCIALLY AND ONE COLUMN WITH LOCALITIES IDs. DIFFERENT INDIVIDUALS MUST HAVE DIFFERENT COORDINATES. IF TWO OR MORE SAMPLES WERE COLLECTED IN THE SAME LOCALITY, CHANGE THE VALUE OF 4TH OR 5TH DECIMAL NUMBER TO SET A DIFFERENCE OF 1 OR 5 METERS. SOME ANALYSES COULD RETURN ERRORS IF THE DIFFERENCES IN METERS BETWEEN INDIVIDUALS IS 0. -- somehow jitter the last digits
+# set basic geospatial reference data
+geoinfo <- sampleInObject[,c(14,12,13,5)] 
+names(geoinfo)[c(2,3)]<- c("latitude","longitude")
+#IF TWO OR MORE SAMPLES WERE COLLECTED IN THE SAME LOCALITY, CHANGE THE VALUE OF 4TH OR 5TH DECIMAL NUMBER TO SET A DIFFERENCE OF 1 OR 5 METERS. SOME ANALYSES COULD RETURN ERRORS IF THE DIFFERENCES IN METERS BETWEEN INDIVIDUALS IS 0.
 
-geoinfo <- sampleInObject[,c()] 
+#load functions
+source("functions_LanGen.R")
+
+if("remotes" %in% rownames(installed.packages()) == FALSE){install.packages("remotes")
+} else {print (paste0("'remotes' has already been installed in library"))}
+if("BiocManager" %in% rownames(installed.packages()) == FALSE){install.packages("BiocManager")
+} else {print (paste0("'BiocManager' has already been installed in library"))}
+if("pacman" %in% rownames(installed.packages()) == FALSE){install.packages("pacman")
+} else {print (paste0("'pacman' has already been installed in library"))}
+if("devtools" %in% rownames(installed.packages()) == FALSE){install.packages("devtools")
+} else {print (paste0("'devtools' has already been installed in library"))}
+
+if("r2vcftools" %in% rownames(installed.packages()) == FALSE){remotes::install_github("nspope/r2vcftools")
+} else {print (paste0("'r2vcftools' has already been installed in library"))}
+if("LEA" %in% rownames(installed.packages()) == FALSE){BiocManager::install("LEA")
+} else {print (paste0("'LEA' has already been installed in library"))}
+if("tidyverse" %in% rownames(installed.packages()) == FALSE){install.packages("tidyverse")
+} else {print (paste0("'tidyverse' has already been installed in library"))}
+if("vcfR" %in% rownames(installed.packages()) == FALSE){install.packages("vcfR")
+} else {print (paste0("'vcfR' has already been installed in library"))}
+if("dartR" %in% rownames(installed.packages()) == FALSE){install.packages("dartR")
+} else {print (paste0("'dartR' has already been installed in library"))}
+if("adegenet" %in% rownames(installed.packages()) == FALSE){install.packages("adegenet")
+} else {print (paste0("'adegenet' has already been installed in library"))}
+if("poppr" %in% rownames(installed.packages()) == FALSE){install.packages("poppr")
+} else {print (paste0("'poppr' has already been installed in library"))}
+if("pcadapt" %in% rownames(installed.packages()) == FALSE){install.packages("pcadapt")
+} else {print (paste0("'pcadapt' has already been installed in library"))}
+if("qvalue" %in% rownames(installed.packages()) == FALSE){BiocManager::install("qvalue")
+} else {print (paste0("'qvalue' has already been installed in library"))}
+if("psych" %in% rownames(installed.packages()) == FALSE){install.packages("psych")
+} else {print (paste0("'psych' has already been installed in library"))}
+if("tess3r" %in% rownames(installed.packages()) == FALSE){devtools::install_github("bcm-uga/TESS3_encho_sen")
+} else {print (paste0("'tess3r' has already been installed in library"))}
+if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages("VennDiagram")
+} else {print (paste0("'VennDiagram' has already been installed in library"))}
+
+#remedy for missing package
+pacman::p_load(r2vcftools, tidyverse, vcfR, dartR, poppr, adegenet, LEA, pcadapt, qvalue, psych, tess3r, VennDiagram)
+#r2vcftools is not available in 3.6.2 r version
+
+#set folders for results
+create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
+```
+
+# 1. Load Files and Verify Data Quality 
+```{r}
+vcf_file = "vcf/rasy_ymf_main.vcf"
+project_name = "rasy_ymfProj"
+coord_file = "coords/geoinfo.csv"
+coords = read.csv(coord_file)
+
+#Define the columns positions for localities ID (local), sample ID (sample_ID), longitude, and latitude.
+local = 5
+sample_ID = 2
+longitude = 4
+latitude = 3
 ```
 
 ```{r}
-#import
-pilot.loci <- pegas::read.vcf("./input/rasy_ymf_main.vcf", from = 10000, to = 10999)
-```
-
-### gstudio
-
-```{r}
-#gstudio.data <- read_population()
+#Load vcf file
+snps_raw <-  vcfLink(vcf_file, overwriteID=T)
+snps_raw
+#r2vcftools::vcfLink is not available...
 ```
 
 ### TreeMix
