@@ -194,9 +194,16 @@ In my case, let's assume I don't remove any individuals from the vcf file.
 # If you do not need to remove individuals,
 snps_unind = snps
 VCFsummary(snps_unind) ## 264 individuals and 328482 SNPs.
+save
 ```
 
 ### 1.4 verify the quality of data
+
+```{r eval=FALSE, include=FALSE}
+#access the output from working directory
+saveRDS(snps_unind, "./output/snps_unind")
+snps_unind <- readRDS("./output/snps_unind")
+```
 
 ```{r}
 #See Genotype Matrix
