@@ -22,13 +22,10 @@ Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2
 
 All the work should be done over R and Rstudio
 -----
-Notes for Instructors: 
+Updates for Instructors: 
 
 For I: 
-
-I have tried running TreeMix on my local computer but too many dependencies I have not downloaded and I hit trouble running proper version of Java when I was installing Nextflow which runs vcf2treemix 
-
-I tried running TreeMix over Yale HPC Grace but it returned error. I just asked HPC and they told me how to run TreeMix in the cluster.
+I got TREEMIX to run over cluster
 
 For II: I am figuring out how to use regular expression to match the sample names in order to run the pipeline. 
 
@@ -50,7 +47,11 @@ library(sf)
 
 ```{r}
 INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
-frogGenind <- load("frogGenind.Rdata")
+#frogGenind <- load("./large.data/frogGenind.Rdata") # if I retrieve frogGenind in this manner, the indNames function below won't work. I had to rerun the vcfR2genind function which takes a long while.
+
+#VCFFILE <- "vcf/rasy_ymf_main.vcf"
+#frogVariants <- vcfR::read.vcfR(VCFFILE, checkFile = T,verbose = T)
+#frogGenind <- vcfR2genind(frogVariants)
 
 # Cleaning data (code borrowed from Nate Edelman)
 getGoodID <- function(x){
@@ -68,7 +69,7 @@ distances <- sampleData[,c("Pond","Lat","Long")] %>%
   distinct(.) 
 distances <- distances[order(distances$Pond),]
 
-validIDs=(as.vector(sapply(indNames(frogGenind),getGoodID)))
+validIDs=(as.vector(sapply(indNames(frogGenind),getGoodID))) ## indNames require proper loading of frogGenind object. 
 sampleInObject <- sampleData[sampleData$sampleName %in% validIDs,]
 ```
 
@@ -116,7 +117,7 @@ if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages(
 } else {print (paste0("'VennDiagram' has already been installed in library"))}
 
 #remedy for missing package
-pacman::p_load(r2vcftools, tidyverse, vcfR, dartR, poppr, adegenet, LEA, pcadapt, qvalue, psych, tess3r, VennDiagram)
+pacman::p_load(tess3r)
 #r2vcftools is not available in 3.6.2 r version
 
 #set folders for results
@@ -125,7 +126,7 @@ create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_
 
 # 1. Load Files and Verify Data Quality 
 ```{r}
-vcf_file = "vcf/rasy_ymf_main.vcf"
+vcf_file = "vcf/rasy_ymf_main.vcf" #this departs from the flow from Nate about genind object-
 project_name = "rasy_ymfProj"
 coord_file = "coords/geoinfo.csv"
 coords = read.csv(coord_file)
@@ -138,10 +139,19 @@ latitude = 3
 ```
 
 ```{r}
+library(r2vcftools)
 #Load vcf file
-snps_raw <-  vcfLink(vcf_file, overwriteID=T)
+snps_raw <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
 snps_raw
-#r2vcftools::vcfLink is not available...
+```
+
+```{r}
+#Remove loci that are not SNPs
+snps <- Filter(snps_raw, filterOptions(max.alleles=2, min.alleles=2), indels="remove")
+```
+
+```{r}
+
 ```
 
 ### TreeMix
