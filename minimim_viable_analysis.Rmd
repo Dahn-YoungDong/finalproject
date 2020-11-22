@@ -31,7 +31,7 @@ For II: I am figuring out how to use regular expression to match the sample name
 
 ### Spatially visualizing genetic clusters with maps of population admixture coefficients
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #load package
 library(pegas)
 library(adegenet)
@@ -45,7 +45,7 @@ library(MASS)
 library(sf)
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
 #frogGenind <- load("./large.data/frogGenind.Rdata") # if I retrieve frogGenind in this manner, the indNames function below won't work. I had to rerun the vcfR2genind function which takes a long while.
 
@@ -73,12 +73,14 @@ validIDs=(as.vector(sapply(indNames(frogGenind),getGoodID))) ## indNames require
 sampleInObject <- sampleData[sampleData$sampleName %in% validIDs,]
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # set basic geospatial reference data
 geoinfo <- sampleInObject[,c(14,12,13,5)] 
 names(geoinfo)[c(2,3)]<- c("latitude","longitude")
 #IF TWO OR MORE SAMPLES WERE COLLECTED IN THE SAME LOCALITY, CHANGE THE VALUE OF 4TH OR 5TH DECIMAL NUMBER TO SET A DIFFERENCE OF 1 OR 5 METERS. SOME ANALYSES COULD RETURN ERRORS IF THE DIFFERENCES IN METERS BETWEEN INDIVIDUALS IS 0.
+```
 
+```{r}
 #load functions
 source("functions_LanGen.R")
 
@@ -119,6 +121,7 @@ if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages(
 #remedy for missing package
 pacman::p_load(tess3r)
 #r2vcftools is not available in 3.6.2 r version
+library(r2vcftools)
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
@@ -128,24 +131,22 @@ create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_
 
 ### 1.1 set up
 ```{r}
-vcf_file = "vcf/rasy_ymf_main.vcf" #this departs from the flow from Nate about genind object-
+vcf_file = "vcf/testdata.vcf" #this departs from the flow from Nate about genind object-
 project_name = "rasy_ymfProj"
-coord_file = "coords/geoinfo.csv"
+coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset, ramdom matching of pond and trimnames!!!!
 coords = read.csv(coord_file)
 
 #Define the columns positions for localities ID (local), sample ID (sample_ID), longitude, and latitude.
-local = 5
-sample_ID = 2
-longitude = 4
-latitude = 3
+local = 4
+sample_ID = 1
+longitude = 3
+latitude = 2
 ```
 
 
 ### 1.2 Load vcf file
 ```{r}
-library(r2vcftools)
 snps_raw <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
-snps_raw
 ```
 
 ```{r}
@@ -157,8 +158,8 @@ snps <- Filter(snps_raw, filterOptions(max.alleles=2, min.alleles=2), indels="re
 #Basic stats sample size (SZ)
 raw_SZ = capture.output(VCFsummary(snps_raw)) 
 filtered_SZ = capture.output(VCFsummary(snps)) 
-raw_SZ #264 individuals and 338701 SNPs. # ten times for SNPs than the example
-filtered_SZ #264 individuals and 328482 SNPs.
+raw_SZ #16 individuals and 227501 SNPs. 
+filtered_SZ #16 individuals and 223601 SNPs.
 snps@sample_id
 snps@site_id
 snps@meta
@@ -193,7 +194,7 @@ In my case, let's assume I don't remove any individuals from the vcf file.
 ```{r}
 # If you do not need to remove individuals,
 snps_unind = snps
-VCFsummary(snps_unind) ## 264 individuals and 328482 SNPs.
+VCFsummary(snps_unind) ## 16 individuals and 223601 SNPs.
 ```
 
 ### 1.4 verify the quality of data
@@ -201,21 +202,23 @@ VCFsummary(snps_unind) ## 264 individuals and 328482 SNPs.
 If the saved snps_unind object is successful, I can resume anytime from here.
 ```{r eval=FALSE, include=FALSE}
 #access the output from working directory
-saveRDS(snps_unind, "./output/snps_unind.rds")
+#saveRDS(snps_unind, "./output/snps_unind.rds")
 snps_unind <- readRDS("./output/snps_unind.rds")
 ```
 
 ```{r}
 #See Genotype Matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
-genotypes[100:110, 100:110] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
+genotypes[1:10, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
+#saveRDS(genotypes, "./output/genotypes.rds")
+#genotypes <- readRDS("./output/genotypes.rds")
 ```
 
 ```{r}
 #Look at depth, quality, HWE, HE, allele frequencies, and Pi
 
 site.depth <- r2vcftools::Query(snps_unind, type="site-mean-depth")
-summary(site.depth$MEAN_DEPTH) #Mean = 3.59 / Median = 2, about 1/20 smaller than the example
+summary(site.depth$MEAN_DEPTH) #Mean = 17 / Median = 12
 hist(site.depth$MEAN_DEPTH, breaks=200) 
 
 quality <- Query(snps_unind, type="site-quality") 
@@ -223,7 +226,7 @@ summary(quality$QUAL) #all 13 with seemingly no variation
 hist(quality$QUAL) ## something wrong here.
 #---------------------------------- analysed till here Nov 17th, 2020
 PI <- Query(snps_unind, type="site-pi")
-mean(PI$PI) ## Mean nucleotide divergency per-site ###0.241
+mean(PI$PI) ## Mean nucleotide divergency per-site ###0.29
 hist(PI$PI)
 
 HWE <- Query(snps_unind, type="hardy")
@@ -235,12 +238,78 @@ HE <- Query(snps_unind, type="het")
 hist(HE$O.HOM) ## O.HOM, E.HOM, N_SITES, F
 hist(HE$E.HOM) 
 hist(HE$N_SITES) 
-hist(HE$F) ## Inbreeding coefficient
+hist(HE$F) ## Inbreeding coefficient 0.4, quite high
 
 freq <- Query(snps_unind, type="freq2")
 hist(freq$X.FREQ.)
 hist(freq$X.FREQ.1)
 head(freq)
 ```
+
+```{r eval=FALSE, include=FALSE}
+#missing per locus
+Missing <- apply(GenotypeMatrix(snps_unind), 2, function(x) sum(x < 0)/length(x)*100)
+summary(Missing) ## no missingness??
+hist(Missing)
+```
+
+```{r eval=FALSE, include=FALSE}
+#missing per individual
+Missing_ind <- apply(GenotypeMatrix(snps_unind),1, function(x) sum(x<0)/length(x)*100)
+summary(Missing_ind) ## Max missing = 0
+hist(Missing_ind)
+```
+### 1.5 add geographic info and missing data by individuals to a vcf file
+
+```{r eval=FALSE, include=FALSE}
+#Save missind data information as data frame # I have no missing data though.
+
+Missingind.df = as.data.frame(Missing_ind)
+#remove string "_sorted" from samples ID if you need it
+row.names(Missingind.df) = str_remove(row.names(Missingind.df), pattern="_sorted")
+#add samples ID to the data frame
+Missingind.df$ID = row.names(Missingind.df)
+Missingind.df
+```
+
+```{r eval=FALSE, include=FALSE}
+#Remove geographical information of individuals that you excluded in step #3 
+#no need because I didn't exclude any
+missing_coord = coords[coords[,sample_ID] %in% Missingind.df$ID,]
+head(missing_coord)
+tail(missing_coord)
+length(missing_coord[,1])
+```
+
+#####When coords are in UTM you need to transform to lon/lat in decimals. Use this code:
+```{r}
+#Add a datum
+#My UTM data are in SAD69 UTM zone 22S. Search in internet the EPSG code for that area. For example https://epsg.io/ 
+#In the case is EPSG:32722.
+#coord_gen_pts = missing_coord[,c(longitude, latitude)] #select lat and long
+#coordinates(coord_gen_pts) <- coord_gen_pts
+#projection(coord_gen_pts) = crs("+init=epsg:32722") #define utm datum only for coord cols
+```
+
+```{r}
+#Sort the geographical information file according to the sample order of the missing data file:
+missing_coord_sorted = missing_coord[order(match(missing_coord[,sample_ID], Missingind.df$ID)),]
+head(missing_coord_sorted)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### TreeMix
