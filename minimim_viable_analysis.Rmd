@@ -22,63 +22,8 @@ Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2
 
 All the work should be done over R and Rstudio
 -----
-Updates for Instructors: 
-
-For I: 
-I got TREEMIX to run over cluster
-
-For II: I am figuring out how to use regular expression to match the sample names in order to run the pipeline. 
 
 ### Spatially visualizing genetic clusters with maps of population admixture coefficients
-
-```{r eval=FALSE, include=FALSE}
-#load package
-library(pegas)
-library(adegenet)
-library(vcfR)
-library(devtools)
-library(ade4)
-library(spdep)
-library(vegan)
-library(dplyr)
-library(MASS)
-library(sf)
-```
-
-```{r eval=FALSE, include=FALSE}
-INDDATA <- "coords/YMF2018_RASYpopgen_sampleinfo.csv"
-#frogGenind <- load("./large.data/frogGenind.Rdata") # if I retrieve frogGenind in this manner, the indNames function below won't work. I had to rerun the vcfR2genind function which takes a long while.
-
-#VCFFILE <- "vcf/rasy_ymf_main.vcf"
-#frogVariants <- vcfR::read.vcfR(VCFFILE, checkFile = T,verbose = T)
-#frogGenind <- vcfR2genind(frogVariants)
-
-# Cleaning data (code borrowed from Nate Edelman)
-getGoodID <- function(x){
-  parts=unlist(strsplit(x,"_"))
-  goodParts=parts[parts!="YNL"]
-  finalName=head(goodParts,-1)
-  return(paste(finalName[1],finalName[2],sep="_"))
-}
-
-sampleData <- read.csv(INDDATA) %>%
-  mutate(sampleName=paste(Pop,sprintf("%03d",Extract),sep="_"))
-sampleData <- sampleData[2:ncol(sampleData)] %>%
-  distinct(.)
-distances <- sampleData[,c("Pond","Lat","Long")] %>% 
-  distinct(.) 
-distances <- distances[order(distances$Pond),]
-
-validIDs=(as.vector(sapply(indNames(frogGenind),getGoodID))) ## indNames require proper loading of frogGenind object. 
-sampleInObject <- sampleData[sampleData$sampleName %in% validIDs,]
-```
-
-```{r eval=FALSE, include=FALSE}
-# set basic geospatial reference data
-geoinfo <- sampleInObject[,c(14,12,13,5)] 
-names(geoinfo)[c(2,3)]<- c("latitude","longitude")
-#IF TWO OR MORE SAMPLES WERE COLLECTED IN THE SAME LOCALITY, CHANGE THE VALUE OF 4TH OR 5TH DECIMAL NUMBER TO SET A DIFFERENCE OF 1 OR 5 METERS. SOME ANALYSES COULD RETURN ERRORS IF THE DIFFERENCES IN METERS BETWEEN INDIVIDUALS IS 0.
-```
 
 ```{r}
 #load functions
@@ -143,7 +88,6 @@ longitude = 3
 latitude = 2
 ```
 
-
 ### 1.2 Load vcf file
 ```{r}
 snps_raw <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
@@ -167,7 +111,7 @@ r2vcftools::Chrom(snps) #return chromosome (contig), position, and ID of each SN
 ```
 
 
-### 1.3 Remove individuals IF IT IS NECESSARY #Ask Nate and Andis
+### 1.3 Remove individuals IF IT IS NECESSARY
 ```{r eval=FALSE, include=FALSE}
 #There are three duplicates in snps@sample_id,
 
