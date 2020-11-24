@@ -1,0 +1,240 @@
+---
+title: "filter"
+author: "Dahn-Young Dong"
+date: "11/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+snps_ind_pc is the snps_unind by removing missing individuals. snps_unind is the base snps file import
+
+#------------------------------------------------------------------------------
+#                        3. Filtering Neutral Loci - Part I
+#------------------------------------------------------------------------------
+###3.1. FILTER DATASET BY QUALITY, MISSING, ALLELIC FREQUENCY, MIN AND MAX COVERAGE, AND HARDY-WEINBERG EQUILIBRIUM (HWE):
+#A. From dataset with low missing by individuals
+snps_fil_hwe_low <- Filter(snps_ind_pc, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
+VCFsummary(snps_fil_hwe_low) #277 individuals and 13958 SNPs.
+
+#B. From dataset with all individuals
+snps_fil_hwe_high <- Filter(snps_unind, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
+VCFsummary(snps_fil_hwe_high)  ## 277 individuals and 13958 SNPs.
+
+#C. Choose one of the datasets (A ou B):
+snps_fil_hwe = snps_fil_hwe_low
+neutralFilter_SZ = capture.output(VCFsummary(snps_fil_hwe))
+
+#D. Define R² value:
+r2 = 0.4
+
+
+###3.2. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) WITHIN CONTIGS:
+## If you have more than one population, you can use this to identify SNPs deviating from HW equilibrium within each population, and then removes those SNPs that are in desequilibrium in all populations. You just need to subset your samples:
+
+#A. remove snps with R² value
+#ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2))
+ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
+head(ld_within)
+hist(ld_within$R.2)
+#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
+
+#B. Select one set of the correlated snps (ID1 or ID2)
+ld_snps <- ld_within$ID1
+nold_snps <- snps_fil_hwe@site_id[!(snps_fil_hwe@site_id %in% ld_snps)] 
+snps_fil_ld <- Subset(snps_fil_hwe, sites=nold_snps) # Keep snps that are not in LD.
+neutralLDWithin_SZ = capture.output(VCFsummary(snps_fil_ld))
+neutralLDWithin_SZ ##277 individuals and 11104 SNPs.
+
+
+###3.3. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) BETWEEN CONTIGS:
+#A. remove snps with R²
+#ld_between <- Linkage(snps_fil_ld, type="interchrom-geno-r2", linkageOptions(min.r2=r2)) 
+ld_between <- read.csv(paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv")) #load this file if it was saved before
+head(ld_between)
+hist(ld_between$R.2)
+#write.csv(ld_between, file= paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv"))
+
+#B. Select one set of the correlated snps (ID1 or ID2)
+ld2_snps <- ld_between$ID1
+nold2_snps <- snps_fil_ld@site_id[!(snps_fil_ld@site_id %in% ld2_snps)]
+snps_fil_ldF <- Subset(snps_fil_ld, sites=nold2_snps) # Keep snps that are not in LD.
+neutralLDBetween_SZ = capture.output(VCFsummary(snps_fil_ldF)) 
+neutralLDBetween_SZ ##277 individuals and 6602 SNPs.
+
+
+###3.4. VERIFY THE QUALITY OF THE FILTERED DATASET:
+#A. Quality indexes:
+site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
+quality2 <- Query(snps_fil_ldF, "site-quality")
+HWE2 <- Query(snps_fil_ldF, type="hardy")
+
+hist(site.depth2$MEAN_DEPTH, breaks=30)
+hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
+hist(quality2$QUAL)
+hist(HWE2$P_HWE[HWE2$P_HWE<200])
+
+#B. Verify the real missing data per individual:
+Missing_ind <- apply(GenotypeMatrix(snps_fil_ldF),1, function(x) sum(x<0)/length(x)*100)
+summary(Missing_ind) ## Max missing = 47.73%
+hist(Missing_ind)
+
+#C. Verify the real missing data per locus:
+Missing <- apply(GenotypeMatrix(snps_fil_ldF), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
+summary(Missing) ## Max missing = 29.96%
+hist(Missing)
+
+VCFsummary(snps_unind) #277 individuals and 35214 SNPs.
+VCFsummary(snps_fil_ldF) ##277 individuals and 6602 SNPs.
+
+###3.5. SAVE THE .VCF FILE WITH ONLY NEUTRAL SNPS:
+Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
+
+
+#------------------------------------------------------------------------------
+#                    7. Filtering Neutral Loci - Part II - TESS3 
+#------------------------------------------------------------------------------
+# Following this tutorial: https://bcm-uga.github.io/TESS3_encho_sen/articles/main-vignette.html
+
+###7.1. INPUT FILES FOR TESS:
+#A. Load the .VCF file with only neutral SNPs:
+snps = vcfLink(paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"), overwriteID=T)
+VCFsummary(snps) ##277 individuals and 6602 SNPs.
+
+#B. Create a Genotype matrix
+genotypes = GenotypeMatrix(snps) # only returns biallelic
+genotypes[1:10, 1:10] ## -1 is missing;
+class(genotypes)
+genotypes = replace(genotypes, genotypes == -1, NA)
+
+#C. Create a Matrix with long and lat 
+coordinates = snps@meta[,4:5]
+class(coordinates)
+coordinates = data.matrix(coordinates, rownames.force = NA)
+class(coordinates)
+#verify the coords
+plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
+
+
+###7.2. RUNNING THE TESS3R FUNCTION:
+#A. Costumize values for the run
+lambda_values = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5) #test lambda values around 1.
+K = c(1:10) # set the number of K to be tested
+replications = 5 # number of replication in each K
+ploidy = 2 # species ploidy
+CPU = 4 #Number of cores for run in parallel
+mask = 0.05 #porportion of masked values
+
+#B.Run a loop for all alpha values
+set.seed(13)
+for (i in lambda_values){
+    tess3.ls = tess3(genotypes, coord = coordinates, K = K, mask = mask, lambda = i,
+                   method = "projected.ls", max.iteration = 5000, rep = replications,
+                   ploidy = ploidy, openMP.core.num = CPU)
+    save(tess3.ls, file = paste0("./Results_Filters/TESS_FST/Tess3ls_Lambda_", i,"_", project_name, ".RData"))
+  
+}
+
+#C. Choose the lambda with the minimum cross-validation value:
+#create a matrix to save results
+cross_value = matrix(NA, max(K)*length(lambda_values), 3)
+colnames(cross_value) = c("K", "Lambda", "Crossvalidation")
+
+loop = 0 #Always set loop = 0.
+for (i in lambda_values){
+  load(file = paste0("./Results_Filters/TESS_FST/Tess3ls_Lambda_", i,"_", project_name, ".RData"))
+    for (j in 1:max(K)){
+      loop=loop+1
+      res = Gettess3res(tess3.ls, K=j)
+      cross_value[loop,1] = j
+      cross_value[loop,2] = i
+      cross_value[loop,3] = min(res$crossvalid.crossentropy)}
+  }
+#save as csv
+write.csv(cross_value,paste0("./Results_Filters/TESS_FST/Tess3ls_Crossvalidation_values_", project_name, ".csv"))
+#choose best lambda
+lambda_tess = as.vector(cross_value[cross_value[,3] == min(cross_value[,3]), ][2])
+lambda_tess
+
+#D. Choose best K:
+#load the best lambda project:
+load(file = paste0("./Results_Filters/TESS_FST/Tess3ls_Lambda_", lambda_tess,"_", project_name, ".RData"))
+#plot results
+pdf(paste0("./Results_Filters/TESS_FST/TESS3_PlotK_CrossValidation_Lambda_", lambda_tess, ".pdf"), onefile =F)
+plot.new()
+plot(tess3.ls, pch = 19, col = "blue", type="b",lwd=2,
+     crossvalid = T, crossentropy = T,
+     xlab = "Number of ancestral populations", cex.lab=1.5,
+     ylab = "Cross-validation score")
+dev.off()
+#best K
+optimal_K = 5
+#ATTENTION, if your dataset is K = 1 force a K = 2 to be able to filter SNPs with FST outliers.
+
+###7.3. FST OUTLIER DETECTION
+#A. Compute results for the best run
+res = Gettess3res(tess3.ls, K=optimal_K)
+
+#B. Select FST statistics for the best run
+FST = res$Fst
+
+#C. Compute the GIF - genomic inflation factor
+lambda = res$gif
+lambda # 3.750238
+
+#D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values
+n = dim(Q(project, run, optimal_K))[1]
+z.scores = sqrt(FST*(n-optimal_K)/(1-FST))
+adj.p.values = pchisq(z.scores^2/lambda, df = optimal_K-1, lower = FALSE)
+hist(adj.p.values, col = "red")
+
+#E. Test different lambda values and plot histogram of p-values
+adj.p.values = pchisq(z.scores^2/2, df = optimal_K-1, lower = FALSE) ## it is the best, but is still strange #try best value until close to one, uniform distribution with a peak at 0, and max 10% of snps 
+hist(adj.p.values, col = "green")
+C_fst <- candidates(alpha=0.1, adj.p.values)
+ManPlot(adj.p.values, C_fst,"Fst")
+
+#F. after you choose one, save the result
+pdf("./Results_Filters/TESS_FST/TESS_FST_Outliers_adj_p_values.pdf", onefile = T)
+hist(adj.p.values, col = "green")
+dev.off()
+
+#G. Candidate loci for FDR control: Benjamini-Hochberg at level 10%
+C_fst <- candidates(alpha=0.1, adj.p.values)
+
+#H. save the Manhatan plot
+pdf("./Results_Filters/TESS_FST/TESS_PlotK_Manhattan_pvalues.pdf", onefile = T) #add the number of snps removed in the name of pdf
+ManPlot(adj.p.values, C_fst, paste0("Fst - Removing ",  length(C_fst), " SNPs"))
+dev.off()
+
+#I. Exclude candidate FST outlier
+snps_fil_ldF_candidate <- Subset(snps, sites=C_fst)
+snps_fil_ldF_candidate@site_id ## These are all the candidate SNPs
+C_TESS = snps_fil_ldF_candidate@site_id
+Chrom(snps_fil_ldF_candidate)
+
+candidates_fst <- snps_fil_ldF_candidate@site_id
+All_snp <- snps@site_id
+N_snp <- All_snp[!(All_snp %in% candidates_fst)] ###Exclude all candidate loci
+
+snps_neutral <- Subset(snps, sites=N_snp)
+VCFsummary(snps_neutral) #277 individuals and 4770 SNPs.
+length(N_snp)
+length(snps@site_id)-length(C_fst) 
+length(snps_neutral@site_id)
+
+neutral_after_fst_TESS = capture.output(VCFsummary(snps_neutral))
+neutral_after_fst_TESS #277 individuals and 4770 SNPs.
+
+#J. Save the vcf
+Save(snps_neutral, paste0("vcf/", project_name, "_filtered_neutral_TESS.vcf"))
+
+###8.3. CHOOSE BEST WAY TO FILTER LOCI OUTLIERS:
+#A. Tess3 in my example:
+snps = vcfLink(paste0("vcf/", project_name,"_filtered_neutral_TESS.vcf"), overwriteID=T)
+VCFsummary(snps) ##277 individuals and 4770 SNPs.
+
+#B. Save as final VCF:
+Save(snps, paste0("vcf/", project_name, "_filtered_neutral.vcf"))

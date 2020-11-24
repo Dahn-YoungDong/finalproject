@@ -64,10 +64,9 @@ if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages(
 } else {print (paste0("'VennDiagram' has already been installed in library"))}
 
 #remedy for missing package
-pacman::p_load(tess3r)
-#r2vcftools is not available in 3.6.2 r version
+install.packages("devtools")
+devtools::install_github("bcm-uga/TESS3_encho_sen")
 library(r2vcftools)
-library(dplyr)
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
@@ -105,35 +104,10 @@ raw_SZ = capture.output(VCFsummary(snps_raw))
 filtered_SZ = capture.output(VCFsummary(snps)) 
 raw_SZ #16 individuals and 227501 SNPs. 
 filtered_SZ #16 individuals and 223601 SNPs.
-snps@sample_id
-snps@site_id
-snps@meta
 r2vcftools::Chrom(snps) #return chromosome (contig), position, and ID of each SNP.
 ```
 
-
 ### 1.3 Remove individuals IF IT IS NECESSARY
-```{r eval=FALSE, include=FALSE}
-#There are three duplicates in snps@sample_id,
-
-#Remove one individual
-snps@meta$sample_name
-UNIND <- snps@sample_id[snps@sample_id != "9202_rep_sorted"]
-snps_unind <- Subset(snps, samples=UNIND)
-snps_unind@meta
-VCFsummary(snps_unind) ## 290 individuals and 35214 SNPs.
-
-#B. Remove more than one individual. In the case Granito locality, the rep individual (9202_rep), and individuals (9541, 9561):
-snps@meta$sample_name
-remove_ind = c("9202_rep_sorted", "9541_sorted", "9561_sorted", "9521_sorted","9522_sorted", "9523_sorted", "9526_sorted","9530_sorted","9531_sorted", "9532_sorted","9533_sorted","9537_sorted","9538_sorted","9540_sorted")
-UNIND <- snps@sample_id[!snps@sample_id %in% remove_ind]
-snps_unind <- Subset(snps, samples=UNIND)
-
-#verify sample size
-length(snps@meta$sample_name)-length(remove_ind)
-length(snps_unind@meta$sample_name)
-VCFsummary(snps_unind) ## 277 individuals and 35214 SNPs.
-```
 
 In my case, let's assume I don't remove any individuals from the vcf file.
 ```{r}
@@ -148,7 +122,7 @@ If the saved snps_unind object is successful, I can resume anytime from here.
 ```{r eval=FALSE, include=FALSE}
 #access the output from working directory
 #saveRDS(snps_unind, "./output/snps_unind.rds")
-snps_unind <- readRDS("./output/snps_unind.rds")
+#snps_unind <- readRDS("./output/snps_unind.rds")
 ```
 
 ```{r}
@@ -284,9 +258,71 @@ tail(snps_unind@meta) #verify
 
 no missing genotype I think
 
+```{r}
+snps_ind_pc <- snps_unind
+```
 
 
+###2.1. FILTER DATASET BY QUALITY, MISSING, ALLELIC FREQUENCY, MIN AND MAX COVERAGE:
 
+```{r}
+
+```
+
+
+```{r}
+#A. From dataset with low missing by individuals
+snps_fil_low = Filter(snps_ind_pc, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200)) 
+VCFsummary(snps_fil_low) #16 individuals and 0 SNPs
+
+#B. From dataset with all individuals
+snps_fil_high <- Filter(snps_unind, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200)) 
+VCFsummary(snps_fil_high)
+
+#C. Choose one of the datasets (A ou B):
+snps_fil = snps_fil_low
+adaptativeFilter_SZ = capture.output(VCFsummary(snps_fil))
+
+#D. Define R² value:
+r2 = 0.4
+
+```
+
+###2.2. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) WITHIN CONTIGS:
+```{r}
+#A. remove snps with R² value
+#ld_within <- Linkage(snps_fil, type="geno-r2", linkageOptions(min.r2= r2)) 
+ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_", r2 , "_test2.csv")) #load this file if it was saved before
+head(ld_within)
+hist(ld_within$R.2)
+#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_", r2 , "_test2.csv"))
+```
+
+```{r}
+#B. Select one set of the correlated snps (ID1 or ID2)
+ld_snps <- ld_within$ID1
+nold_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld_snps)] 
+snps_fil_ld <- Subset(snps_fil, sites=nold_snps)
+adaptativeLD_SZ = capture.output(VCFsummary(snps_fil_ld))
+adaptativeLD_SZ #277 individuals and 19025 SNPs.
+```
+
+###2.3. VERIFY THE REAL MISSING DATA VALUE IN THE DATASET AFTER REMOVING CORRELATED SNPS:  
+```{r}
+#A. Missing per individual:
+Missing_ind <- apply(GenotypeMatrix(snps_fil_ld),1, function(x) sum(x<0)/length(x)*100)
+summary(Missing_ind) ## Max missing = 50.16%
+hist(Missing_ind)
+
+#B. Missing per locus:
+Missing <- apply(GenotypeMatrix(snps_fil_ld), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
+summary(Missing) ## Max missing = 29.96%
+hist(Missing)
+
+
+###2.4. SAVE THE .VCF FILE FILTERED WITH ADAPTATIVE SNPS
+Save(snps_fil_ld, paste0("vcf/", project_name,"_filtered_adaptative.vcf"))
+```
 
 
 
