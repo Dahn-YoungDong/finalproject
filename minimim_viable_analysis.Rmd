@@ -226,7 +226,6 @@ tail(missing_coord)
 length(missing_coord[,1])
 ```
 
-#####When coords are in UTM you need to transform to lon/lat in decimals. Use this code:
 ```{r}
 missing_coord = missing_coord[!is.na(missing_coord[,longitude]),]
 ```
