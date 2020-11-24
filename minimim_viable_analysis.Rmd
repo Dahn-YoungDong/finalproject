@@ -263,7 +263,7 @@ hist(Missing_ind)
 
 ```{r eval=FALSE, include=FALSE}
 #Save missind data information as data frame # I have no missing data though.
-
+library(stringr)
 Missingind.df = as.data.frame(Missing_ind)
 #remove string "_sorted" from samples ID if you need it
 row.names(Missingind.df) = str_remove(row.names(Missingind.df), pattern="_sorted")
@@ -283,9 +283,14 @@ length(missing_coord[,1])
 
 #####When coords are in UTM you need to transform to lon/lat in decimals. Use this code:
 ```{r}
+missing_coord = missing_coord[!is.na(missing_coord[,longitude]),]
+```
+
+```{r eval=FALSE, include=FALSE}
 #Add a datum
 #My UTM data are in SAD69 UTM zone 22S. Search in internet the EPSG code for that area. For example https://epsg.io/ 
 #In the case is EPSG:32722.
+#library(aqp)
 #coord_gen_pts = missing_coord[,c(longitude, latitude)] #select lat and long
 #coordinates(coord_gen_pts) <- coord_gen_pts
 #projection(coord_gen_pts) = crs("+init=epsg:32722") #define utm datum only for coord cols
@@ -297,7 +302,22 @@ missing_coord_sorted = missing_coord[order(match(missing_coord[,sample_ID], Miss
 head(missing_coord_sorted)
 ```
 
+```{r}
+#Check if there are some difference between files. If they are corrected, function will return "character (0)"
+setdiff(Missingind.df$ID, missing_coord_sorted[,sample_ID])
+```
 
+```{r}
+#Check if identical samples were selected in the same order. If they are corrected, function will return "TRUE"
+identical(as.character(Missingind.df$ID), as.character(missing_coord_sorted[,sample_ID]))
+```
+
+```{r}
+#Create a data frame merging missing and geographical information
+missing_local = cbind(missing_coord_sorted[,c(local, longitude, latitude)], Missingind.df)
+head(missing_local)
+tail(missing_local)
+```
 
 
 
