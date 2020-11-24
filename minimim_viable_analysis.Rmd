@@ -67,6 +67,7 @@ if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages(
 pacman::p_load(tess3r)
 #r2vcftools is not available in 3.6.2 r version
 library(r2vcftools)
+library(dplyr)
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
@@ -258,11 +259,31 @@ identical(as.character(Missingind.df$ID), as.character(missing_coord_sorted[,sam
 
 ```{r}
 #Create a data frame merging missing and geographical information
-missing_local = cbind(missing_coord_sorted[,c(local, longitude, latitude)], Missingind.df)
+missing_local = cbind(missing_coord_sorted[,c(local, longitude, latitude)], Missingind.df) # cant bind because there is no missing data to assign geo information with.
 head(missing_local)
 tail(missing_local)
 ```
+```{r}
+#H. Add coords and missing information to vcf file. Be careful to the order!
 
+#add the information. You can add more columns if you need, like ecological traits or other grouping classification 
+snps_unind@meta$local_ID = coords[,4] #locality pond ID
+snps_unind@meta$longitude = coords[,3] #longitude
+snps_unind@meta$latitude = coords[,2] #latitude
+snps_unind@meta$ind_ID = coords[,1] #sample ID
+#verify the file
+head(snps_unind@meta) #verify
+tail(snps_unind@meta) #verify
+```
+
+```{r}
+#I. Save metafile with missing data and geographical information:
+#not going to save because I have no missing data
+```
+
+###1.6. REMOVE INDIVIDUALS WITH LARGE AMOUNT OF MISSING GENOTYPES
+
+no missing genotype I think
 
 
 
