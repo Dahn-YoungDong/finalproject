@@ -9,8 +9,6 @@ output: rmarkdown::github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Mimimum Viable Analysis
-
 I: Use program TreeMix to make inference of patterns of population splitting and mixing from genomewide allele frequency data (over Linux Shell bash either locally or HPC grace to understand gene flow directions of populations)
 
 Source for the documentation and download of treemix https://bitbucket.org/nygcresearch/treemix/downloads/
@@ -76,7 +74,7 @@ create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_
 
 ### 1.1 set up
 ```{r}
-vcf_file = "vcf/testdata.vcf" #this departs from the flow from Nate about genind object-
+vcf_file = "vcf/testdata_filter.vcf" #this departs from the flow from Nate about genind object-
 project_name = "rasy_ymfProj"
 coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset, ramdom matching of pond and trimnames!!!!
 coords = read.csv(coord_file)
@@ -119,8 +117,8 @@ VCFsummary(snps_unind) ## 16 individuals and 223601 SNPs.
 ### 1.4 verify the quality of data
 
 If the saved snps_unind object is successful, I can resume anytime from here.
-```{r eval=FALSE, include=FALSE}
-#access the output from working directory
+```{r eval=FALSE, include=FALSE} 
+#reloading the object is not useful, it doesn't run the downstream code. Have to reload the  r2vcftools::vcfLink function everytime
 #saveRDS(snps_unind, "./output/snps_unind.rds")
 #snps_unind <- readRDS("./output/snps_unind.rds")
 ```
