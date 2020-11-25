@@ -178,64 +178,9 @@ Missing_ind <- apply(GenotypeMatrix(snps_unind),1, function(x) sum(x<0)/length(x
 summary(Missing_ind) ## Max missing = 0
 hist(Missing_ind)
 ```
-### 1.5 add geographic info and missing data by individuals to a vcf file
 
-```{r eval=FALSE, include=FALSE}
-#Save missind data information as data frame # I have no missing data though.
-library(stringr)
-Missingind.df = as.data.frame(Missing_ind)
-#remove string "_sorted" from samples ID if you need it
-row.names(Missingind.df) = str_remove(row.names(Missingind.df), pattern="_sorted")
-#add samples ID to the data frame
-Missingind.df$ID = row.names(Missingind.df)
-Missingind.df
-```
+### 1.5 add geographic info by individuals to a vcf file
 
-```{r eval=FALSE, include=FALSE}
-#Remove geographical information of individuals that you excluded in step #3 
-#no need because I didn't exclude any
-missing_coord = coords[coords[,sample_ID] %in% Missingind.df$ID,]
-head(missing_coord)
-tail(missing_coord)
-length(missing_coord[,1])
-```
-
-```{r}
-missing_coord = missing_coord[!is.na(missing_coord[,longitude]),]
-```
-
-```{r eval=FALSE, include=FALSE}
-#Add a datum
-#My UTM data are in SAD69 UTM zone 22S. Search in internet the EPSG code for that area. For example https://epsg.io/ 
-#In the case is EPSG:32722.
-#library(aqp)
-#coord_gen_pts = missing_coord[,c(longitude, latitude)] #select lat and long
-#coordinates(coord_gen_pts) <- coord_gen_pts
-#projection(coord_gen_pts) = crs("+init=epsg:32722") #define utm datum only for coord cols
-```
-
-```{r}
-#Sort the geographical information file according to the sample order of the missing data file:
-missing_coord_sorted = missing_coord[order(match(missing_coord[,sample_ID], Missingind.df$ID)),]
-head(missing_coord_sorted)
-```
-
-```{r}
-#Check if there are some difference between files. If they are corrected, function will return "character (0)"
-setdiff(Missingind.df$ID, missing_coord_sorted[,sample_ID])
-```
-
-```{r}
-#Check if identical samples were selected in the same order. If they are corrected, function will return "TRUE"
-identical(as.character(Missingind.df$ID), as.character(missing_coord_sorted[,sample_ID]))
-```
-
-```{r}
-#Create a data frame merging missing and geographical information
-missing_local = cbind(missing_coord_sorted[,c(local, longitude, latitude)], Missingind.df) # cant bind because there is no missing data to assign geo information with.
-head(missing_local)
-tail(missing_local)
-```
 ```{r}
 #H. Add coords and missing information to vcf file. Be careful to the order!
 
@@ -248,86 +193,9 @@ snps_unind@meta$ind_ID = coords[,1] #sample ID
 head(snps_unind@meta) #verify
 tail(snps_unind@meta) #verify
 ```
-
-```{r}
-#I. Save metafile with missing data and geographical information:
-#not going to save because I have no missing data
-```
-
-###1.6. REMOVE INDIVIDUALS WITH LARGE AMOUNT OF MISSING GENOTYPES
-
-no missing genotype I think
-
 ```{r}
 snps_ind_pc <- snps_unind
 ```
-
-
-###2.1. FILTER DATASET BY QUALITY, MISSING, ALLELIC FREQUENCY, MIN AND MAX COVERAGE:
-
-```{r}
-
-```
-
-
-```{r}
-#A. From dataset with low missing by individuals
-snps_fil_low = Filter(snps_ind_pc, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200)) 
-VCFsummary(snps_fil_low) #16 individuals and 0 SNPs
-
-#B. From dataset with all individuals
-snps_fil_high <- Filter(snps_unind, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200)) 
-VCFsummary(snps_fil_high)
-
-#C. Choose one of the datasets (A ou B):
-snps_fil = snps_fil_low
-adaptativeFilter_SZ = capture.output(VCFsummary(snps_fil))
-
-#D. Define R² value:
-r2 = 0.4
-
-```
-
-###2.2. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) WITHIN CONTIGS:
-```{r}
-#A. remove snps with R² value
-#ld_within <- Linkage(snps_fil, type="geno-r2", linkageOptions(min.r2= r2)) 
-ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_", r2 , "_test2.csv")) #load this file if it was saved before
-head(ld_within)
-hist(ld_within$R.2)
-#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_", r2 , "_test2.csv"))
-```
-
-```{r}
-#B. Select one set of the correlated snps (ID1 or ID2)
-ld_snps <- ld_within$ID1
-nold_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld_snps)] 
-snps_fil_ld <- Subset(snps_fil, sites=nold_snps)
-adaptativeLD_SZ = capture.output(VCFsummary(snps_fil_ld))
-adaptativeLD_SZ #277 individuals and 19025 SNPs.
-```
-
-###2.3. VERIFY THE REAL MISSING DATA VALUE IN THE DATASET AFTER REMOVING CORRELATED SNPS:  
-```{r}
-#A. Missing per individual:
-Missing_ind <- apply(GenotypeMatrix(snps_fil_ld),1, function(x) sum(x<0)/length(x)*100)
-summary(Missing_ind) ## Max missing = 50.16%
-hist(Missing_ind)
-
-#B. Missing per locus:
-Missing <- apply(GenotypeMatrix(snps_fil_ld), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
-summary(Missing) ## Max missing = 29.96%
-hist(Missing)
-
-
-###2.4. SAVE THE .VCF FILE FILTERED WITH ADAPTATIVE SNPS
-Save(snps_fil_ld, paste0("vcf/", project_name,"_filtered_adaptative.vcf"))
-```
-
-
-
-
-
 
 
 

@@ -15,21 +15,28 @@ snps_ind_pc is the snps_unind by removing missing individuals. snps_unind is the
 #                        3. Filtering Neutral Loci - Part I
 #------------------------------------------------------------------------------
 ###3.1. FILTER DATASET BY QUALITY, MISSING, ALLELIC FREQUENCY, MIN AND MAX COVERAGE, AND HARDY-WEINBERG EQUILIBRIUM (HWE):
+
+```{r}
 #A. From dataset with low missing by individuals
 snps_fil_hwe_low <- Filter(snps_ind_pc, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
-VCFsummary(snps_fil_hwe_low) #277 individuals and 13958 SNPs.
+VCFsummary(snps_fil_hwe_low) #16 individuals and 0 SNPs.
+```
 
+```{r}
 #B. From dataset with all individuals
 snps_fil_hwe_high <- Filter(snps_unind, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
-VCFsummary(snps_fil_hwe_high)  ## 277 individuals and 13958 SNPs.
-
-#C. Choose one of the datasets (A ou B):
+VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 0 SNPs.
+```
+```{r}
+#C. Choose one of the datasets (A or B):
 snps_fil_hwe = snps_fil_hwe_low
 neutralFilter_SZ = capture.output(VCFsummary(snps_fil_hwe))
+```
 
+```{r}
 #D. Define R² value:
 r2 = 0.4
-
+```
 
 ###3.2. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) WITHIN CONTIGS:
 ## If you have more than one population, you can use this to identify SNPs deviating from HW equilibrium within each population, and then removes those SNPs that are in desequilibrium in all populations. You just need to subset your samples:
