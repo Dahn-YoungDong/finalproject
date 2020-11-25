@@ -1,5 +1,5 @@
 ---
-title: "Minimum viable analysis"
+title: "preparing gep-referenced snps dataset"
 author: "Dahn-Young Dong"
 date: "10/22/2020"
 output: rmarkdown::github_document
