@@ -9,28 +9,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-snps_ind_pc is the snps_unind by removing missing individuals. snps_unind is the base snps file import
-
 #------------------------------------------------------------------------------
 #                        3. Filtering Neutral Loci - Part I
 #------------------------------------------------------------------------------
 ###3.1. FILTER DATASET BY QUALITY, MISSING, ALLELIC FREQUENCY, MIN AND MAX COVERAGE, AND HARDY-WEINBERG EQUILIBRIUM (HWE):
 
 ```{r}
-#A. From dataset with low missing by individuals
-snps_fil_hwe_low <- Filter(snps_ind_pc, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
-VCFsummary(snps_fil_hwe_low) #16 individuals and 0 SNPs.
+#B. From dataset with all individuals, ingored minQ
+snps_fil_hwe_high <- Filter(snps_unind, filterOptions(max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
+VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 10342 SNPs.
 ```
 
 ```{r}
-#B. From dataset with all individuals
-snps_fil_hwe_high <- Filter(snps_unind, filterOptions(minQ=30, max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
-VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 0 SNPs.
-```
-```{r}
-#C. Choose one of the datasets (A or B):
-snps_fil_hwe = snps_fil_hwe_low
+#C. Choose one of the datasets (A or B):choose B
+snps_fil_hwe = snps_fil_hwe_high
 neutralFilter_SZ = capture.output(VCFsummary(snps_fil_hwe))
+#"16 individuals and 10342 SNPs."
 ```
 
 ```{r}
@@ -43,38 +37,44 @@ r2 = 0.4
 
 ```{r}
 #A. remove snps with R² value
-ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2))
-ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
+ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # GOT STUCK HERE Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
+#ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_within)
 hist(ld_within$R.2)
-#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
+write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
 ```
 
-#B. Select one set of the correlated snps (ID1 or ID2)
+```{r}
+#B. Select one set of the correlated snps (ID1 or ID2) I selected ID1
 ld_snps <- ld_within$ID1
 nold_snps <- snps_fil_hwe@site_id[!(snps_fil_hwe@site_id %in% ld_snps)] 
-snps_fil_ld <- Subset(snps_fil_hwe, sites=nold_snps) # Keep snps that are not in LD.
+snps_fil_ld <- Subset(snps_fil_hwe, sites=nold_snps) # Keep snps that are not in LD. # in my case should be all the original SNPs, because no LD.
 neutralLDWithin_SZ = capture.output(VCFsummary(snps_fil_ld))
-neutralLDWithin_SZ ##277 individuals and 11104 SNPs.
-
+##"16 individuals and 10342 SNPs."
+```
 
 ###3.3. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) BETWEEN CONTIGS:
+```{r}
 #A. remove snps with R²
-#ld_between <- Linkage(snps_fil_ld, type="interchrom-geno-r2", linkageOptions(min.r2=r2)) 
+ld_between <- Linkage(snps_fil_ld, type="interchrom-geno-r2", linkageOptions(min.r2=r2)) 
 ld_between <- read.csv(paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_between)
 hist(ld_between$R.2)
 #write.csv(ld_between, file= paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv"))
+```
 
+```{r}
 #B. Select one set of the correlated snps (ID1 or ID2)
 ld2_snps <- ld_between$ID1
 nold2_snps <- snps_fil_ld@site_id[!(snps_fil_ld@site_id %in% ld2_snps)]
 snps_fil_ldF <- Subset(snps_fil_ld, sites=nold2_snps) # Keep snps that are not in LD.
 neutralLDBetween_SZ = capture.output(VCFsummary(snps_fil_ldF)) 
-neutralLDBetween_SZ ##277 individuals and 6602 SNPs.
-
+neutralLDBetween_SZ ##"16 individuals and 100 SNPs." #only 100 SNPs left. Would the filter be too stringent? Can I change the filter, say min.r2 larger?
+```
 
 ###3.4. VERIFY THE QUALITY OF THE FILTERED DATASET:
+
+```{r}
 #A. Quality indexes:
 site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
 quality2 <- Query(snps_fil_ldF, "site-quality")
@@ -84,12 +84,16 @@ hist(site.depth2$MEAN_DEPTH, breaks=30)
 hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
 hist(quality2$QUAL)
 hist(HWE2$P_HWE[HWE2$P_HWE<200])
+```
 
+```{r}
 #B. Verify the real missing data per individual:
 Missing_ind <- apply(GenotypeMatrix(snps_fil_ldF),1, function(x) sum(x<0)/length(x)*100)
 summary(Missing_ind) ## Max missing = 47.73%
 hist(Missing_ind)
+```
 
+```{r}
 #C. Verify the real missing data per locus:
 Missing <- apply(GenotypeMatrix(snps_fil_ldF), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
 summary(Missing) ## Max missing = 29.96%
@@ -97,6 +101,7 @@ hist(Missing)
 
 VCFsummary(snps_unind) #277 individuals and 35214 SNPs.
 VCFsummary(snps_fil_ldF) ##277 individuals and 6602 SNPs.
+```
 
 ###3.5. SAVE THE .VCF FILE WITH ONLY NEUTRAL SNPS:
 Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))

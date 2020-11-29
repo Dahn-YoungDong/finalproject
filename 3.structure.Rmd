@@ -16,17 +16,29 @@ _filtered_neutral.vcf is the input file, saved from the output from markdown "fi
 #------------------------------------------------------------------------------
 # Following this tutorial: https://bcm-uga.github.io/TESS3_encho_sen/articles/main-vignette.html
 
+
+```{r}
+library(ggplot2)
+library(raster)
+library(maps)
+```
+
 ###3.1. INPUT FILES FOR TESS:
+```{r}
 #A. Load the .VCF file with only neutral SNPs:
 snps = vcfLink(paste0("vcf/", project_name,"_filtered_neutral.vcf"), overwriteID=T)
 VCFsummary(snps) ##277 individuals and 5268 SNPs.
+```
 
+```{r}
 #B. Create a Genotype matrix
 genotypes = GenotypeMatrix(snps) # only returns biallelic
 genotypes[1:10, 1:10] ## -1 is missing;
 class(genotypes)
 genotypes = replace(genotypes, genotypes == -1, NA)
+```
 
+```{r}
 #C. Create a Matrix with long and lat 
 coordinates = snps@meta[,4:5]
 class(coordinates)
@@ -34,7 +46,7 @@ coordinates = data.matrix(coordinates, rownames.force = NA)
 class(coordinates)
 #verify the coords
 plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
-
+```
 
 ###3.2. RUNNING THE TESS3R FUNCTION:
 #A. Costumize values for the run

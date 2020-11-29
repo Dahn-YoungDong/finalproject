@@ -26,45 +26,28 @@ All the work should be done over R and Rstudio
 ```{r}
 #load functions
 source("functions_LanGen.R")
-
-if("remotes" %in% rownames(installed.packages()) == FALSE){install.packages("remotes")
-} else {print (paste0("'remotes' has already been installed in library"))}
-if("BiocManager" %in% rownames(installed.packages()) == FALSE){install.packages("BiocManager")
-} else {print (paste0("'BiocManager' has already been installed in library"))}
-if("pacman" %in% rownames(installed.packages()) == FALSE){install.packages("pacman")
-} else {print (paste0("'pacman' has already been installed in library"))}
-if("devtools" %in% rownames(installed.packages()) == FALSE){install.packages("devtools")
-} else {print (paste0("'devtools' has already been installed in library"))}
-
-if("r2vcftools" %in% rownames(installed.packages()) == FALSE){remotes::install_github("nspope/r2vcftools")
-} else {print (paste0("'r2vcftools' has already been installed in library"))}
-if("LEA" %in% rownames(installed.packages()) == FALSE){BiocManager::install("LEA")
-} else {print (paste0("'LEA' has already been installed in library"))}
-if("tidyverse" %in% rownames(installed.packages()) == FALSE){install.packages("tidyverse")
-} else {print (paste0("'tidyverse' has already been installed in library"))}
-if("vcfR" %in% rownames(installed.packages()) == FALSE){install.packages("vcfR")
-} else {print (paste0("'vcfR' has already been installed in library"))}
-if("dartR" %in% rownames(installed.packages()) == FALSE){install.packages("dartR")
-} else {print (paste0("'dartR' has already been installed in library"))}
-if("adegenet" %in% rownames(installed.packages()) == FALSE){install.packages("adegenet")
-} else {print (paste0("'adegenet' has already been installed in library"))}
-if("poppr" %in% rownames(installed.packages()) == FALSE){install.packages("poppr")
-} else {print (paste0("'poppr' has already been installed in library"))}
-if("pcadapt" %in% rownames(installed.packages()) == FALSE){install.packages("pcadapt")
-} else {print (paste0("'pcadapt' has already been installed in library"))}
-if("qvalue" %in% rownames(installed.packages()) == FALSE){BiocManager::install("qvalue")
-} else {print (paste0("'qvalue' has already been installed in library"))}
-if("psych" %in% rownames(installed.packages()) == FALSE){install.packages("psych")
-} else {print (paste0("'psych' has already been installed in library"))}
-if("tess3r" %in% rownames(installed.packages()) == FALSE){devtools::install_github("bcm-uga/TESS3_encho_sen")
-} else {print (paste0("'tess3r' has already been installed in library"))}
-if("VennDiagram" %in% rownames(installed.packages()) == FALSE){install.packages("VennDiagram")
-} else {print (paste0("'VennDiagram' has already been installed in library"))}
+library(remotes)
+library(BiocManager)
+library(pacman)
+library(devtools)
+library(r2vcftools)
+library(LEA)
+library(tidyverse)
+library(vcfR)
+library(adegenet)
+library(poppr)
+library(pcadapt)
+library(qvalue)
+library(psych)
+library(VennDiagram)
 
 #remedy for missing package
-install.packages("devtools")
-devtools::install_github("bcm-uga/TESS3_encho_sen")
-library(r2vcftools)
+#install.packages("devtools")
+#devtools::install_github("bcm-uga/TESS3_encho_sen")
+library(tess3r)
+
+#BiocManager::install("SNPRelate")
+library(dartR)
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
@@ -74,7 +57,7 @@ create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_
 
 ### 1.1 set up
 ```{r}
-vcf_file = "vcf/testdata_filter.vcf" #this departs from the flow from Nate about genind object-
+vcf_file = "vcf/testdata_nomissing.vcf" #biallelic SNP dataset with no missing data for 
 project_name = "rasy_ymfProj"
 coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset, ramdom matching of pond and trimnames!!!!
 coords = read.csv(coord_file)
@@ -88,66 +71,38 @@ latitude = 2
 
 ### 1.2 Load vcf file
 ```{r}
-snps_raw <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
+snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
 ```
-
-```{r}
-#Remove loci that are not SNPs
-snps <- Filter(snps_raw, filterOptions(max.alleles=2, min.alleles=2), indels="remove")
-```
-
 ```{r SNPs stats}
 #Basic stats sample size (SZ)
-raw_SZ = capture.output(VCFsummary(snps_raw)) 
-filtered_SZ = capture.output(VCFsummary(snps)) 
-raw_SZ #16 individuals and 227501 SNPs. 
-filtered_SZ #16 individuals and 223601 SNPs.
-r2vcftools::Chrom(snps) #return chromosome (contig), position, and ID of each SNP.
+capture.output(VCFsummary(snps_unind)) 
+r2vcftools::Chrom(snps_unind) #return chromosome (contig), position, and ID of each SNP.
 ```
-
-### 1.3 Remove individuals IF IT IS NECESSARY
-
-In my case, let's assume I don't remove any individuals from the vcf file.
-```{r}
-# If you do not need to remove individuals,
-snps_unind = snps
-VCFsummary(snps_unind) ## 16 individuals and 223601 SNPs.
-```
-
 ### 1.4 verify the quality of data
-
-If the saved snps_unind object is successful, I can resume anytime from here.
-```{r eval=FALSE, include=FALSE} 
-#reloading the object is not useful, it doesn't run the downstream code. Have to reload the  r2vcftools::vcfLink function everytime
-#saveRDS(snps_unind, "./output/snps_unind.rds")
-#snps_unind <- readRDS("./output/snps_unind.rds")
-```
 
 ```{r}
 #See Genotype Matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
 genotypes[1:10, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
-#saveRDS(genotypes, "./output/genotypes.rds")
-#genotypes <- readRDS("./output/genotypes.rds")
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #Look at depth, quality, HWE, HE, allele frequencies, and Pi
 
 site.depth <- r2vcftools::Query(snps_unind, type="site-mean-depth")
-summary(site.depth$MEAN_DEPTH) #Mean = 17 / Median = 12
+summary(site.depth$MEAN_DEPTH) #Mean = 33 / Median = 33
 hist(site.depth$MEAN_DEPTH, breaks=200) 
 
 quality <- Query(snps_unind, type="site-quality") 
 summary(quality$QUAL) #all 13 with seemingly no variation
-hist(quality$QUAL) ## something wrong here.
-#---------------------------------- analysed till here Nov 17th, 2020
+hist(quality$QUAL) ## no site quality information in my dataset
+
 PI <- Query(snps_unind, type="site-pi")
-mean(PI$PI) ## Mean nucleotide divergency per-site ###0.29
+mean(PI$PI) ## Mean nucleotide divergency per-site ###0.244
 hist(PI$PI)
 
 HWE <- Query(snps_unind, type="hardy")
-summary(HWE$P_HWE) #Mean = 0.129 / Median = 0.0012
+summary(HWE$P_HWE) #Mean = 0.775 / Median = 1
 hist(HWE$P_HWE)
 hist(HWE$P_HWE[HWE$P_HWE<0.0001])
 
@@ -166,14 +121,14 @@ head(freq)
 ```{r eval=FALSE, include=FALSE}
 #missing per locus
 Missing <- apply(GenotypeMatrix(snps_unind), 2, function(x) sum(x < 0)/length(x)*100)
-summary(Missing) ## no missingness??
+summary(Missing) ## most loci have no missing data
 hist(Missing)
 ```
 
 ```{r eval=FALSE, include=FALSE}
 #missing per individual
 Missing_ind <- apply(GenotypeMatrix(snps_unind),1, function(x) sum(x<0)/length(x)*100)
-summary(Missing_ind) ## Max missing = 0
+summary(Missing_ind) ## Max missing = 1.4
 hist(Missing_ind)
 ```
 
@@ -190,9 +145,6 @@ snps_unind@meta$ind_ID = coords[,1] #sample ID
 #verify the file
 head(snps_unind@meta) #verify
 tail(snps_unind@meta) #verify
-```
-```{r}
-snps_ind_pc <- snps_unind
 ```
 
 
