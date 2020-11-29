@@ -74,7 +74,7 @@ neutralLDBetween_SZ ##"16 individuals and 100 SNPs." #only 100 SNPs left. Would 
 
 ###3.4. VERIFY THE QUALITY OF THE FILTERED DATASET:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #A. Quality indexes:
 site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
 quality2 <- Query(snps_fil_ldF, "site-quality")
@@ -89,23 +89,24 @@ hist(HWE2$P_HWE[HWE2$P_HWE<200])
 ```{r}
 #B. Verify the real missing data per individual:
 Missing_ind <- apply(GenotypeMatrix(snps_fil_ldF),1, function(x) sum(x<0)/length(x)*100)
-summary(Missing_ind) ## Max missing = 47.73%
+summary(Missing_ind) ## Max missing = 1
 hist(Missing_ind)
 ```
 
 ```{r}
 #C. Verify the real missing data per locus:
 Missing <- apply(GenotypeMatrix(snps_fil_ldF), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
-summary(Missing) ## Max missing = 29.96%
+summary(Missing) ## Max missing = 6.25%
 hist(Missing)
 
-VCFsummary(snps_unind) #277 individuals and 35214 SNPs.
-VCFsummary(snps_fil_ldF) ##277 individuals and 6602 SNPs.
+VCFsummary(snps_unind) #16 individuals and 18077 SNPs.
+VCFsummary(snps_fil_ldF) ##16 individuals and 100 SNPs.
 ```
 
 ###3.5. SAVE THE .VCF FILE WITH ONLY NEUTRAL SNPS:
+```{r}
 Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
-
+```
 
 #------------------------------------------------------------------------------
 #                    7. Filtering Neutral Loci - Part II - TESS3 
@@ -113,16 +114,21 @@ Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
 # Following this tutorial: https://bcm-uga.github.io/TESS3_encho_sen/articles/main-vignette.html
 
 ###7.1. INPUT FILES FOR TESS:
+```{r}
 #A. Load the .VCF file with only neutral SNPs:
 snps = vcfLink(paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"), overwriteID=T)
-VCFsummary(snps) ##277 individuals and 6602 SNPs.
+VCFsummary(snps) ##16 individuals and 100 SNPs.
+```
 
+```{r}
 #B. Create a Genotype matrix
 genotypes = GenotypeMatrix(snps) # only returns biallelic
 genotypes[1:10, 1:10] ## -1 is missing;
 class(genotypes)
-genotypes = replace(genotypes, genotypes == -1, NA)
+genotypes = replace(genotypes, genotypes == -1, NA) #what is this for
+```
 
+```{r}
 #C. Create a Matrix with long and lat 
 coordinates = snps@meta[,4:5]
 class(coordinates)
@@ -130,7 +136,7 @@ coordinates = data.matrix(coordinates, rownames.force = NA)
 class(coordinates)
 #verify the coords
 plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
-
+```
 
 ###7.2. RUNNING THE TESS3R FUNCTION:
 #A. Costumize values for the run
