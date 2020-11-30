@@ -1,5 +1,5 @@
 
-#THE GOAL FOR THIS DOCUMENT IS TO GET THE "PROJECT" OBJECT NECESSARY TO RUN "n = dim(Q(project, run, optimal_K))[1]" in 2.filter.Rmd
+#THE GOAL FOR THIS DOCUMENT IS TO GET THE "PROJECT" OBJECT NECESSARY TO RUN "n = dim(Q(project, run, optimal_K))[1]" in 2.filter.Rmd 
 
 
 #------------------------------------------------------------------------------
@@ -92,3 +92,4 @@ best_run_split = scan(text = best_run, what = "")
 path_best_run = paste0("./Results_Filters/sNMF_FST/Alpha", alpha_values[as.numeric(best_run_split[6])],"/", project_name, "_filtered_neutral_partial.snmfProject")
 #set the values
 project = load.snmfProject(path_best_run)
+run=as.numeric(best_run_split[9])

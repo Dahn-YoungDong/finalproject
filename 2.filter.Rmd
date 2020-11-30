@@ -222,8 +222,8 @@ lambda # 0.2805724
 
 ```{r}
 #D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values
-n = dim(Q(project, run, optimal_K))[1] #can't run this yet because function Q() is from another pipeline and it requires a snmfProject object.
-z.scores = sqrt(FST*(n-optimal_K)/(1-FST))
+n = dim(Q(project, run, optimal_K_sNMF))[1] #used optimal K for sNMF method, instead of TESS method ### this can be really wrong ....
+z.scores = sqrt(FST*(n-optimal_K)/(1-FST)) #and here I didn't change back for optimal_K... really nonsense
 adj.p.values = pchisq(z.scores^2/lambda, df = optimal_K-1, lower = FALSE)
 hist(adj.p.values, col = "red")
 
@@ -261,13 +261,15 @@ All_snp <- snps@site_id
 N_snp <- All_snp[!(All_snp %in% candidates_fst)] ###Exclude all candidate loci
 
 snps_neutral <- Subset(snps, sites=N_snp)
-VCFsummary(snps_neutral) #277 individuals and 4770 SNPs.
+VCFsummary(snps_neutral) #16 individuals and 100 SNPs.
 length(N_snp)
 length(snps@site_id)-length(C_fst) 
 length(snps_neutral@site_id)
 
 neutral_after_fst_TESS = capture.output(VCFsummary(snps_neutral))
-neutral_after_fst_TESS #277 individuals and 4770 SNPs.
+neutral_after_fst_TESS #"16 individuals and 100 SNPs."
+
+## gosh, so glad the 100SNPS are still here 
 ```
 
 ```{r}
@@ -277,9 +279,15 @@ Save(snps_neutral, paste0("vcf/", project_name, "_filtered_neutral_TESS.vcf"))
 
 
 ###8.3. CHOOSE BEST WAY TO FILTER LOCI OUTLIERS:
+
+```{r}
 #A. Tess3 in my example:
 snps = vcfLink(paste0("vcf/", project_name,"_filtered_neutral_TESS.vcf"), overwriteID=T)
-VCFsummary(snps) ##277 individuals and 4770 SNPs.
+VCFsummary(snps) ##16 individuals and 100 SNPs.
 
 #B. Save as final VCF:
 Save(snps, paste0("vcf/", project_name, "_filtered_neutral.vcf"))
+```
+
+
+
