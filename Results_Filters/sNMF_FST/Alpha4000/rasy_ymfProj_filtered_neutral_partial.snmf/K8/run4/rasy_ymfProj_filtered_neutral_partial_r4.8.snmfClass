@@ -1,0 +1,6 @@
+new("snmfClass", directory = "K8/run4/", snmfClass.file = "rasy_ymfProj_filtered_neutral_partial_r4.8.snmfClass", 
+    K = 8L, run = 4L, CPU = 4L, seed = 46741121L, alpha = 4000, 
+    percentage = 0.05, I = 0L, iterations = 200L, entropy = TRUE, 
+    tolerance = 1e-05, crossEntropy = 2.34962988251381, ploidy = 2L, 
+    Q.input.file = "", Q.output.file = "rasy_ymfProj_filtered_neutral_partial_r4.8.Q", 
+    G.output.file = "rasy_ymfProj_filtered_neutral_partial_r4.8.G")
