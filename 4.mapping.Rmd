@@ -15,6 +15,7 @@ library(rgdal)
 library(rnaturalearth)
 library(GISTools)
 library(mapplots)
+library(sp)
 
 create_dir(c("./Results_Maps"))
 ```
@@ -60,69 +61,24 @@ ext = extent(-72.16100, -72.11800, 41.91700, 41.97200)
 #D. Define the axes from maps
 axis.x = c(-72.16100, -72.11800)
 axis.y = c(41.91700, 41.97200)
-
 ```
 
 ###1.4. CREATING RASTER FOR THE BASE OF MAPS - HILLSHADE, SLOPE AND LANDCOVER
 ```{r eval=FALSE, include=FALSE}
-
-## extent didn't match so skip for now 
-
 #A. Load DEM raster (elevation raster):
-DEM = elevationLow <- readRDS("./maps/rasters/elevationLow.rds") ## extent didn't match so skip for now 
+#DEM = elevationLow <- readRDS("./maps/rasters/elevation.rds") ## extent didn't match so skip for now 
+#DEM <- projectRaster(DEM, crs = landcover@crs)
 #plot the map
-plot(DEM, col = gray.colors(20, start = 0, end = 1))
+#plot(DEM, col = gray.colors(20, start = 0, end = 1))
 #crop according to study area
-DEM_base = crop(DEM, ext)
+#DEM_base = crop(DEM, ext)
+
+#temp <- raster::readAll(DEM_base)
+#saveRDS(temp, file = "./maps/rasters/DEM_base.rds")
+
+DEM_base <- readRDS("./maps/rasters/DEM_base.rds")
 plot(DEM_base, col = gray.colors(20, start = 0, end = 1))
-
 ```
-
-```{r}
-#D. If you do not have a landcover raster, download it from NaturalEarth site
-landcover = ne_download(scale = 10, type = 'NE1_LR_LC', category="raster")
-#save as raster
-writeRaster(landcover, "maps/rasters/LC_NaturalEarth.tif", bandorder='BIL', driver='GTiff', overwrite=TRUE)
-```
-
-```{r}
-###1.5. LOAD RASTERS AND SHAPEFILES FOR MAPS AND CORRECT THE CRS
-#A. Load, crop and verify the CRS for all rasters:
-
-landcover = stack("maps/rasters/LC_NaturalEarth.tif") #multi band raster as satelite images
-landcover = stack("maps/rasters/nlcd_trans.tif")
-landcover = crop(landcover, ext)
-proj4string(landcover)
-```
-
-```{r}
-#if you need to fix the CRS base on a model, also a raster:
-raster_to_fix = spTransform(raster_to_fix, proj4string(raster_model))
-
-#B. Load, crop and verify the CRS for all shapefiles:
-#cangas
-cangas = shapefile("maps/shapefiles/Cangas.shp")
-#if your shapefile is smaller than study area you do not need to crop. If you do it, the object will be NULL
-#cangas = crop(cangas, ext) 
-crs(cangas)
-
-#if you need to fix the CRS base on a model, also a raster:
-cangas = spTransform(cangas, proj4string(landcover2))
-crs(cangas)
-
-
-###1.6. COMBINE THE ELEMENTS TO TEST CONSTRAST, BRIGHTNESS, AND OTHER PARAMETERS FOR THE MAPS
-#A. test the plot for a new map. For Carajas area and maps. These are a sample:
-plot.new()
-
-plotRGB(hillshade, r = 1, g = 2, b = 3, interpolate = T , ext= ext, alpha = 255, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r') #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover2,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =120, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover3,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =100, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plot(cangas, add=TRUE, axes = F, bg = FALSE, bty ="n", xaxt='n', ann=FALSE, yaxt='n', lwd=1, col = "beige")
-
-dev.off()
-```
-
 
 #------------------------------------------------------------------------------
 #                           2. Mapping Genetic Clusters 
@@ -139,28 +95,30 @@ par(oma=c(2,2,2,2))
 plot.window(xlim= axis.x, ylim= axis.y)
 ```
 
+```{r}
 #B. Plot maps for the base
-plotRGB(hillshade, r = 1, g = 2, b = 3, interpolate = T , ext= ext, alpha = 255, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r') #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover2,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =120, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover3,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =100, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plot(cangas, add=TRUE, axes = F, bg = FALSE, bty ="n", xaxt='n', ann=FALSE, yaxt='n', lwd=1, col = "beige")
+plot(DEM_base, col = gray.colors(20, start = 0, end = 1))
 
 #C. Plot lat and long axes:
-axis(1, at=seq(-50.7, -49.7, by=0.2),  cex.axis=1, pos=-6.5)
-axis(2, at=seq(-6.5, -5.8, by=0.2),  cex.axis=1, las=1, pos=-50.7)
+#axis(1, at=seq(-72.16100, -72.11800, by=0.01))
+#axis(2, at=seq(41.91700, 41.97200, by=0.01))
 
 #D. Plot the points:
 #set population names and colors. SAME THAN STEP 2!
-col_tess= c('red', 'pink', "yellow", 'blue', 'darkslategrey')
-legend_tess = c("POP1", "POP2", "POP3", "POP4", "POP5")
+col_tess= c("red","orange","yellow","green","blue","purple","black","grey","turquoise") 
+legend_tess = c("POP1", "POP2", "POP3", "POP4", "POP5", "POP6","POP7","POP8","POP9")
 
-#plot points. One line for each populations. Add or remove lines according to your necessity.
+#plot points. One line for each populations. Add or remove lines according to your necessity. #the code here is inconsistent, can't find pop_TESS_X
 points(df$longitude[pop_TESS_1], df$latitude[pop_TESS_1], col = 'black', bg = col_tess[1], cex = 2.5, pch=21) #POP1
 points(df$longitude[pop_TESS_2], df$latitude[pop_TESS_2], col = 'black', bg = col_tess[2], cex = 2.5, pch=21) #POP2
 points(df$longitude[pop_TESS_3], df$latitude[pop_TESS_3], col = 'black', bg = col_tess[3], cex = 2.5, pch=21) #POP3
 points(df$longitude[pop_TESS_4], df$latitude[pop_TESS_4], col = 'black', bg = col_tess[4], cex = 2.5, pch=21) #POP4
 points(df$longitude[pop_TESS_5], df$latitude[pop_TESS_5], col = 'black', bg = col_tess[5], cex = 2.5, pch=21) #POP5
-
+points(df$longitude[pop_TESS_6], df$latitude[pop_TESS_6], col = 'black', bg = col_tess[6], cex = 2.5, pch=21) #POP5
+points(df$longitude[pop_TESS_7], df$latitude[pop_TESS_7], col = 'black', bg = col_tess[7], cex = 2.5, pch=21) #POP5
+points(df$longitude[pop_TESS_8], df$latitude[pop_TESS_8], col = 'black', bg = col_tess[8], cex = 2.5, pch=21) #POP5
+points(df$longitude[pop_TESS_9], df$latitude[pop_TESS_9], col = 'black', bg = col_tess[9], cex = 2.5, pch=21) #POP5
+```
 
 #E. Plot the names of Serras in Carajás or any area names according to shapefile information
 posi_names_serra = which(!is.na(cangas$Serra2))
@@ -192,7 +150,7 @@ dev.off()
 #------------------------------------------------------------------------------
 #                     3. Mapping Ancestry Coefficients as Pie Chart
 #------------------------------------------------------------------------------
-
+```{r}
 ###3.2. MAPS USING TESS COEFFICIENTS
 #A. Open pdf, choose the font letters, margins and axes.
 pdf(paste0("./Results_Maps/Map_TESS_coeficients_", project_name, ".pdf"), family="Helvetica", onefile = F)
@@ -247,3 +205,4 @@ north.arrow(xb=-49.8, yb=-6.45, len=0.015, cex.lab=0.8, lab="N", col='black', fo
   
 #J. Turn off pdf:
 dev.off()
+```
