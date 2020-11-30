@@ -206,20 +206,23 @@ optimal_K = 9 #if I go for the least cross-validation score, the criterion for s
 #ATTENTION, if your dataset is K = 1 force a K = 2 to be able to filter SNPs with FST outliers.
 ```
 
+
+###7.3. FST OUTLIER DETECTION  
 ```{r}
-###7.3. FST OUTLIER DETECTION
 #A. Compute results for the best run
 res = Gettess3res(tess3.ls, K=optimal_K)
 
-#B. Select FST statistics for the best run
+#B. Select FST statistics for the best run ## how to select here? There are 100 results
 FST = res$Fst
 
 #C. Compute the GIF - genomic inflation factor
 lambda = res$gif
-lambda # 3.750238
+lambda # 0.2805724
+```
 
+```{r}
 #D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values
-n = dim(Q(project, run, optimal_K))[1]
+n = dim(Q(project, run, optimal_K))[1] #can't run this yet because function Q() is from another pipeline and it requires a snmfProject object.
 z.scores = sqrt(FST*(n-optimal_K)/(1-FST))
 adj.p.values = pchisq(z.scores^2/lambda, df = optimal_K-1, lower = FALSE)
 hist(adj.p.values, col = "red")
@@ -234,7 +237,9 @@ ManPlot(adj.p.values, C_fst,"Fst")
 pdf("./Results_Filters/TESS_FST/TESS_FST_Outliers_adj_p_values.pdf", onefile = T)
 hist(adj.p.values, col = "green")
 dev.off()
+```
 
+```{r}
 #G. Candidate loci for FDR control: Benjamini-Hochberg at level 10%
 C_fst <- candidates(alpha=0.1, adj.p.values)
 
@@ -242,7 +247,9 @@ C_fst <- candidates(alpha=0.1, adj.p.values)
 pdf("./Results_Filters/TESS_FST/TESS_PlotK_Manhattan_pvalues.pdf", onefile = T) #add the number of snps removed in the name of pdf
 ManPlot(adj.p.values, C_fst, paste0("Fst - Removing ",  length(C_fst), " SNPs"))
 dev.off()
+```
 
+```{r}
 #I. Exclude candidate FST outlier
 snps_fil_ldF_candidate <- Subset(snps, sites=C_fst)
 snps_fil_ldF_candidate@site_id ## These are all the candidate SNPs
@@ -261,9 +268,13 @@ length(snps_neutral@site_id)
 
 neutral_after_fst_TESS = capture.output(VCFsummary(snps_neutral))
 neutral_after_fst_TESS #277 individuals and 4770 SNPs.
+```
 
+```{r}
 #J. Save the vcf
 Save(snps_neutral, paste0("vcf/", project_name, "_filtered_neutral_TESS.vcf"))
+```
+
 
 ###8.3. CHOOSE BEST WAY TO FILTER LOCI OUTLIERS:
 #A. Tess3 in my example:
