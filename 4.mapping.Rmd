@@ -12,11 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 #------------------------------------------------------------------------------
 #                    1. Loading Files and Configuring Maps 
 #------------------------------------------------------------------------------
-###1.1. CHOOSE A NAME FOR THE PROJECT. MUST BE THE SAME ONE THAN OTHER STEPS:
-#A. Project name:
-project_name = "pilocarpus"
 
-
+```{r}
 ###1.2. LOAD VCF FILES, GEOGRAPHICAL INFORMATIONS AND ADMIXTURE COEFFICIENTS: 
 #A. Load neutral .vcf file with geographical information and admixture and :
 snps_neutral = vcfLink(paste0("vcf/", project_name, "_filtered_neutral_LEA_DAPC_TESS.vcf"), overwriteID=T)
@@ -32,6 +29,7 @@ for (i in 1:length(unique(df$PopID_snmf))){
   pop = which(df$PopID_snmf == i)
   assign(paste0("pop_snmf_", i), pop)
 }
+```
 
 #D. Create vectors with samples' position by population in DAPC approach:
 for (i in 1:length(unique(df$PopID_DAPC))){
