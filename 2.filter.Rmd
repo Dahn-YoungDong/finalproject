@@ -138,16 +138,22 @@ class(coordinates)
 plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
 ```
 
-###7.2. RUNNING THE TESS3R FUNCTION:
-#A. Costumize values for the run
+###7.2. RUNNING THE TESS3R FUNCTION:  
+It's a package for inference of Spatial Population Genetic Structure
+
+```{r}
+#A. Customize values for the run
 lambda_values = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5) #test lambda values around 1.
 K = c(1:10) # set the number of K to be tested
 replications = 5 # number of replication in each K
 ploidy = 2 # species ploidy
 CPU = 4 #Number of cores for run in parallel
 mask = 0.05 #porportion of masked values
+```
 
-#B.Run a loop for all alpha values
+```{r}
+#B.Run a loop for all alpha (lambda) values
+#Estimate ancestry coefficients and run genome scans for selection-- estimation of spatial population structure
 set.seed(13)
 for (i in lambda_values){
     tess3.ls = tess3(genotypes, coord = coordinates, K = K, mask = mask, lambda = i,
@@ -156,7 +162,9 @@ for (i in lambda_values){
     save(tess3.ls, file = paste0("./Results_Filters/TESS_FST/Tess3ls_Lambda_", i,"_", project_name, ".RData"))
   
 }
+```
 
+```{r}
 #C. Choose the lambda with the minimum cross-validation value:
 #create a matrix to save results
 cross_value = matrix(NA, max(K)*length(lambda_values), 3)
@@ -174,25 +182,31 @@ for (i in lambda_values){
   }
 #save as csv
 write.csv(cross_value,paste0("./Results_Filters/TESS_FST/Tess3ls_Crossvalidation_values_", project_name, ".csv"))
-#choose best lambda
+#choose best lambda; I don't know how they made the decision of best lambda
 lambda_tess = as.vector(cross_value[cross_value[,3] == min(cross_value[,3]), ][2])
 lambda_tess
+#the decision here chose 1.5 as the optimal lambda
+```
 
+```{r}
 #D. Choose best K:
 #load the best lambda project:
 load(file = paste0("./Results_Filters/TESS_FST/Tess3ls_Lambda_", lambda_tess,"_", project_name, ".RData"))
 #plot results
 pdf(paste0("./Results_Filters/TESS_FST/TESS3_PlotK_CrossValidation_Lambda_", lambda_tess, ".pdf"), onefile =F)
-plot.new()
+plot.new()##not sure what this is
 plot(tess3.ls, pch = 19, col = "blue", type="b",lwd=2,
      crossvalid = T, crossentropy = T,
      xlab = "Number of ancestral populations", cex.lab=1.5,
      ylab = "Cross-validation score")
-dev.off()
+dev.off() #not sure what this is
 #best K
-optimal_K = 5
-#ATTENTION, if your dataset is K = 1 force a K = 2 to be able to filter SNPs with FST outliers.
+optimal_K = 9 #if I go for the least cross-validation score, the criterion for selecting lambda
 
+#ATTENTION, if your dataset is K = 1 force a K = 2 to be able to filter SNPs with FST outliers.
+```
+
+```{r}
 ###7.3. FST OUTLIER DETECTION
 #A. Compute results for the best run
 res = Gettess3res(tess3.ls, K=optimal_K)
