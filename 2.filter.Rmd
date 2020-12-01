@@ -18,17 +18,19 @@ knitr::opts_chunk$set(echo = TRUE)
 #B. From dataset with all individuals, ingored minQ
 snps_fil_hwe_high <- Filter(snps_unind, filterOptions(max.missing = 0.7, maf=0.05, min.meanDP=20, max.meanDP=200, hwe=0.0001)) 
 VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 10342 SNPs.
+
+#left out snps_fil_hwe_low
 ```
 
 ```{r}
-#C. Choose one of the datasets (A or B):choose B
+#C. Choose one of the datasets (A or B): --- choose B: snps_fil_hwe_high
 snps_fil_hwe = snps_fil_hwe_high
 neutralFilter_SZ = capture.output(VCFsummary(snps_fil_hwe))
 #"16 individuals and 10342 SNPs."
 ```
 
 ```{r}
-#D. Define R² value:
+#D. Define R² value: #how to properly assign this?
 r2 = 0.4
 ```
 
@@ -37,15 +39,15 @@ r2 = 0.4
 
 ```{r}
 #A. remove snps with R² value
-ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # GOT STUCK HERE Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
-#ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
+#ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # GOT STUCK HERE Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
+ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_within)
-hist(ld_within$R.2)
-write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
+#hist(ld_within$R.2)
+#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
 ```
 
 ```{r}
-#B. Select one set of the correlated snps (ID1 or ID2) I selected ID1
+#B. Select one set of the correlated snps (ID1 or ID2): I selected ID1
 ld_snps <- ld_within$ID1
 nold_snps <- snps_fil_hwe@site_id[!(snps_fil_hwe@site_id %in% ld_snps)] 
 snps_fil_ld <- Subset(snps_fil_hwe, sites=nold_snps) # Keep snps that are not in LD. # in my case should be all the original SNPs, because no LD.
@@ -56,7 +58,7 @@ neutralLDWithin_SZ = capture.output(VCFsummary(snps_fil_ld))
 ###3.3. FILTER DATASET BY LINKAGE DISEQUILIBRIUM (LD) BETWEEN CONTIGS:
 ```{r}
 #A. remove snps with R²
-ld_between <- Linkage(snps_fil_ld, type="interchrom-geno-r2", linkageOptions(min.r2=r2)) 
+#ld_between <- Linkage(snps_fil_ld, type="interchrom-geno-r2", linkageOptions(min.r2=r2)) #maube change r2 value here, to leave out more SNPs
 ld_between <- read.csv(paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_between)
 hist(ld_between$R.2)
@@ -75,9 +77,9 @@ neutralLDBetween_SZ ##"16 individuals and 100 SNPs." #only 100 SNPs left. Would 
 ###3.4. VERIFY THE QUALITY OF THE FILTERED DATASET:
 
 ```{r eval=FALSE, include=FALSE}
-#A. Quality indexes:
+#A. Quality indexes: #important is to know how to evaluate these indices
 site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
-quality2 <- Query(snps_fil_ldF, "site-quality")
+quality2 <- Query(snps_fil_ldF, "site-quality") #no site quality info
 HWE2 <- Query(snps_fil_ldF, type="hardy")
 
 hist(site.depth2$MEAN_DEPTH, breaks=30)
@@ -148,7 +150,7 @@ K = c(1:10) # set the number of K to be tested
 replications = 5 # number of replication in each K
 ploidy = 2 # species ploidy
 CPU = 4 #Number of cores for run in parallel
-mask = 0.05 #porportion of masked values
+mask = 0.05 #proportion of masked values
 ```
 
 ```{r}
@@ -222,7 +224,7 @@ lambda # 0.2805724
 
 ```{r}
 #D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values
-n = dim(Q(project, run, optimal_K_sNMF))[1] #used optimal K for sNMF method, instead of TESS method ### this can be really wrong ....
+n = dim(Q(project, run, optimal_K_sNMF))[1] # this requires running "2.filter_supp", used optimal K for sNMF method, instead of TESS method ### this can be really wrong ....
 z.scores = sqrt(FST*(n-optimal_K)/(1-FST)) #and here I didn't change back for optimal_K... really nonsense
 adj.p.values = pchisq(z.scores^2/lambda, df = optimal_K-1, lower = FALSE)
 hist(adj.p.values, col = "red")
@@ -244,8 +246,9 @@ dev.off()
 C_fst <- candidates(alpha=0.1, adj.p.values)
 
 #H. save the Manhatan plot
-pdf("./Results_Filters/TESS_FST/TESS_PlotK_Manhattan_pvalues.pdf", onefile = T) #add the number of snps removed in the name of pdf
 ManPlot(adj.p.values, C_fst, paste0("Fst - Removing ",  length(C_fst), " SNPs"))
+pdf("./Results_Filters/TESS_FST/TESS_PlotK_Manhattan_pvalues.pdf", onefile = T) #add the number of snps removed in the name of pdf
+
 dev.off()
 ```
 

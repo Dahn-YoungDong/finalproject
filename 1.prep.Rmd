@@ -57,9 +57,9 @@ create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_
 
 ### 1.1 set up
 ```{r}
-vcf_file = "vcf/testdata_nomissing.vcf" #biallelic SNP dataset with no missing data for 
+vcf_file = "vcf/testdata_nomissing.vcf" #biallelic SNP dataset with no missing data- from Andis Arietta 
 project_name = "rasy_ymfProj"
-coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset, ramdom matching of pond and trimnames!!!!
+coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset
 coords = read.csv(coord_file)
 
 #Define the columns positions for localities ID (local), sample ID (sample_ID), longitude, and latitude.
@@ -83,7 +83,7 @@ r2vcftools::Chrom(snps_unind) #return chromosome (contig), position, and ID of e
 ```{r}
 #See Genotype Matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
-genotypes[1:10, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
+genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -135,9 +135,9 @@ hist(Missing_ind)
 ### 1.5 add geographic info by individuals to a vcf file
 
 ```{r}
-#H. Add coords and missing information to vcf file. Be careful to the order!
+#H. Add coordinates to vcf file.
 
-#add the information. You can add more columns if you need, like ecological traits or other grouping classification 
+#add the information. 
 snps_unind@meta$local_ID = coords[,4] #locality pond ID
 snps_unind@meta$longitude = coords[,3] #longitude
 snps_unind@meta$latitude = coords[,2] #latitude
@@ -146,8 +146,3 @@ snps_unind@meta$ind_ID = coords[,1] #sample ID
 head(snps_unind@meta) #verify
 tail(snps_unind@meta) #verify
 ```
-
-
-
-
-### TreeMix

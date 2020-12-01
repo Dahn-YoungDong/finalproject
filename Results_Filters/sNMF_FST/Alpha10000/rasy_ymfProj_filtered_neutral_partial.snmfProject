@@ -55,5 +55,5 @@ new("snmfProject", snmfProject.file = "rasy_ymfProj_filtered_neutral_partial.snm
     "K8/run5/rasy_ymfProj_filtered_neutral_partial_r5.8.snmfClass", 
     "K9/run5/rasy_ymfProj_filtered_neutral_partial_r5.9.snmfClass", 
     "K10/run5/rasy_ymfProj_filtered_neutral_partial_r5.10.snmfClass"
-    ), n = 16L, L = 100L, creationTime = structure(1606704032.81955, class = c("POSIXct", 
+    ), n = 16L, L = 100L, creationTime = structure(1606785956.95849, class = c("POSIXct", 
     "POSIXt")))
