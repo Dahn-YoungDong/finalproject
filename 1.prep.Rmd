@@ -15,7 +15,6 @@ Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2
 
 All the work should be done over R and Rstudio
 -----
-
 ### Visualitzation of ancestry proportions of the 16 individuals AND spatial maps of population admixture coefficients
 
 ```{r}
@@ -66,19 +65,22 @@ latitude = 2
 
 ### 1.2 Load vcf file
 ```{r}
-snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T) # should I specify overwriteID as suggested in the pipeline?
+#Creates an object of class vcfLink, which acts as an interface to a temporary VCF file. Also loads metadata (if present) associated with the samples.
+snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T)
 ```
 ```{r SNPs stats}
 #Basic stats sample size (SZ)
-capture.output(VCFsummary(snps_unind)) 
+capture.output(VCFsummary(snps_unind)) #"16 individuals and 18077 SNPs."
+
 r2vcftools::Chrom(snps_unind) #return chromosome (contig), position, and ID of each SNP.
 ```
 ### 1.4 verify the quality of data
 
 ```{r}
-#See Genotype Matrix
+#Converts the VCF file to genotype matrix format and returns this matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
-genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
+genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes
+#this suggest molecular evolution on SNP-basis. For example, snp1 for 16 individuals, most are homozygous for the reference more frequent allele, yet individual 15 has alternative alleles
 ```
 
 ```{r eval=FALSE, include=FALSE}
@@ -93,7 +95,7 @@ summary(quality$QUAL) #all 13 with seemingly no variation
 hist(quality$QUAL) ## no site quality information in my dataset
 
 PI <- Query(snps_unind, type="site-pi")
-mean(PI$PI) ## Mean nucleotide divergency per-site ###0.244
+mean(PI$PI) ## Mean nucleotide divergency per-site ###0.244. 
 hist(PI$PI)
 
 HWE <- Query(snps_unind, type="hardy")
@@ -117,7 +119,7 @@ head(freq)
 #missing per locus
 Missing <- apply(GenotypeMatrix(snps_unind), 2, function(x) sum(x < 0)/length(x)*100)
 summary(Missing) ## most loci have no missing data
-hist(Missing)
+hist(Missing, breaks = 50)
 ```
 
 ```{r eval=FALSE, include=FALSE}

@@ -26,7 +26,97 @@ My collaborator A. Z. Andis Arietta did the collection, initial filter and proce
 
 ## Methods
 
+I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, particularly the ones related to manipulating and visualizing genomic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure. They included 3-4 different parallel analyses and I chose TESS3 as my main analyses, which is also what the author preferred.
+
 I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation map of the locality, though the detailed wrangling is not shown in this project.  
+
+```{r}
+source("functions_LanGen.R")
+library(remotes)
+library(BiocManager)
+library(pacman)
+library(devtools)
+library(r2vcftools)
+library(LEA)
+library(tess3r)
+
+#set folders for results
+create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
+```
+
+### 1. Load Files and Verify Data Quality 
+
+#### 1.1 set up
+```{r}
+vcf_file = "vcf/testdata_nomissing.vcf" #biallelic SNP dataset with no missing data- from Andis Arietta 
+project_name = "rasy_ymfProj"
+coord_file = "coords/testdata_geoinfo.csv" ## this is using smaller dataset
+coords = read.csv(coord_file)
+```
+
+#### 1.2 Load vcf file
+```{r}
+#Creates an object of class vcfLink, which acts as an interface to a temporary VCF file. Also loads metadata (if present) associated with the samples.
+snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T)
+```
+
+#### 1.3 Verify the quality of data
+
+```{r}
+#Converts the VCF file to genotype matrix format and returns this matrix
+genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
+genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
+```
+
+```{r eval=FALSE, include=FALSE}
+#specify which analyses or conversions to perform on the data that passed through all specified filters
+
+#Look at depth, quality, HWE, HE, allele frequencies, and Pi
+
+site.depth <- r2vcftools::Query(snps_unind, type="site-mean-depth")
+summary(site.depth$MEAN_DEPTH) #Mean = 33 / Median = 33
+hist(site.depth$MEAN_DEPTH, breaks=200) 
+#most SNPs have coverage of 33. This is a good number for most SNPs. 
+
+#average number of nucleotide differences per site, denoted by pi
+PI <- Query(snps_unind, type="site-pi")
+mean(PI$PI) ## Mean nucleotide divergency per-site 0.244. At each SNP site, on average, 20% of the genotypes are different? Seem quite diverse. Molecular evolution at each site is quite high.
+hist(PI$PI)
+
+#Reports a p-value for each site from a Hardy-Weinberg Equilibrium test
+HWE <- Query(snps_unind, type="hardy")
+summary(HWE$P_HWE) #Mean = 0.775 / Median = 1
+hist(HWE$P_HWE) #almost all fail to reject the null hypothesis, meaning most SNPs are at HWE, that is neutral markers under no selection
+hist(HWE$P_HWE[HWE$P_HWE<0.05]) #around 800 snps our of 18000 are out of HWE, violating some of the assumptions in HWE. Good sign that most SNPs are neutral here...
+```
+
+#### 1.5 add geographic info by individuals to a vcf file
+
+```{r}
+#Add coordinates to vcf file.
+
+#add the information. 
+snps_unind@meta$local_ID = coords[,4] #locality pond ID
+snps_unind@meta$longitude = coords[,3] #longitude
+snps_unind@meta$latitude = coords[,2] #latitude
+snps_unind@meta$ind_ID = coords[,1] #sample ID
+#verify the file
+head(snps_unind@meta) #verify
+```
+
+
+### 2. Load Files and Verify Data Quality 
+
+#### 2.1 FILTER DATASET BY MISSING, MIN AND MAX COVERAGE, AND HARDY-WEINBERG EQUILIBRIUM (HWE):
+```{r}
+#B. From dataset with all individuals, ingored minQ
+snps_fil_hwe_high <- Filter(snps_unind, filterOptions(max.missing = 0.7, min.meanDP=20, max.meanDP=500, hwe=0.7)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed).
+
+
+VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 10342 SNPs.
+
+#left out snps_fil_hwe_low
+```
 
 ## Results
 
