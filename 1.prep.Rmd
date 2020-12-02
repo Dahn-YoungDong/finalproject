@@ -9,19 +9,14 @@ output: rmarkdown::github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-I: Use program TreeMix to make inference of patterns of population splitting and mixing from genomewide allele frequency data (over Linux Shell bash either locally or HPC grace to understand gene flow directions of populations)
+Visualitzation of ancestry proportions of the 16 individuals AND spatial maps of admixture coefficients
 
-Source for the documentation and download of treemix https://bitbucket.org/nygcresearch/treemix/downloads/
-script example by github contributor https://github.com/jbv2/nf-vcf2treemix
-
-II: Spatially visualizing genetic clusters with maps of population admixture coefficients
-
-Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, the ones related to manipulating and visualizing genetic data given spatial coordinates--- 1.1 filtering SNPS, 1.2 genetic structure, 1.3 Maps.
+Follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, the ones related to manipulating and visualizing genetic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure
 
 All the work should be done over R and Rstudio
 -----
 
-### Spatially visualizing genetic clusters with maps of population admixture coefficients
+### Visualitzation of ancestry proportions of the 16 individuals AND spatial maps of population admixture coefficients
 
 ```{r}
 #load functions

@@ -1,8 +1,12 @@
 # Phylogenetic Biology - Final Project
 
-DahnYoung_Dong_Final is a place holder. The main content is at Minimal Viablity Analysis. I am currently relocating things to the three markdowns 1. filter , 2. structure, and 3. mapping
+DahnYoung_Dong_Final is a place holder. The main content is the three markdowns 1. prep , 2. filter, and 3. structure
 
+*Dec 1st*
+Look at "1.prep"" to make sense the data prepping code
 
+*Nov 30th*
+Finished prelim analysis. Produced an ancestry proportion graph, and a comparative plot of both spatially interpolated ancestry coefficients and population location mapped on elevation. 
 
 *Nov 24th:*
 still figuring out the structure for minimal viability analysis. 

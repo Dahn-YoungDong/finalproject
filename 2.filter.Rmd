@@ -39,7 +39,7 @@ r2 = 0.4
 
 ```{r}
 #A. remove snps with R² value
-#ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # GOT STUCK HERE Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
+#ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
 ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_within)
 #hist(ld_within$R.2)
@@ -155,7 +155,7 @@ mask = 0.05 #proportion of masked values
 
 ```{r}
 #B.Run a loop for all alpha (lambda) values
-#Estimate ancestry coefficients and run genome scans for selection-- estimation of spatial population structure
+#Estimate ancestry coefficients-- estimation of spatial population structure
 set.seed(13)
 for (i in lambda_values){
     tess3.ls = tess3(genotypes, coord = coordinates, K = K, mask = mask, lambda = i,
@@ -223,7 +223,7 @@ lambda # 0.2805724
 ```
 
 ```{r}
-#D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values
+#D. Compute adjusted p-values from the combined z-scores and plot histogram of p-values # was not successful
 n = dim(Q(project, run, optimal_K_sNMF))[1] # this requires running "2.filter_supp", used optimal K for sNMF method, instead of TESS method ### this can be really wrong ....
 z.scores = sqrt(FST*(n-optimal_K)/(1-FST)) #and here I didn't change back for optimal_K... really nonsense
 adj.p.values = pchisq(z.scores^2/lambda, df = optimal_K-1, lower = FALSE)
@@ -242,6 +242,7 @@ dev.off()
 ```
 
 ```{r}
+#was not successful
 #G. Candidate loci for FDR control: Benjamini-Hochberg at level 10%
 C_fst <- candidates(alpha=0.1, adj.p.values)
 
@@ -253,6 +254,7 @@ dev.off()
 ```
 
 ```{r}
+#was not successful
 #I. Exclude candidate FST outlier
 snps_fil_ldF_candidate <- Subset(snps, sites=C_fst)
 snps_fil_ldF_candidate@site_id ## These are all the candidate SNPs
@@ -272,7 +274,7 @@ length(snps_neutral@site_id)
 neutral_after_fst_TESS = capture.output(VCFsummary(snps_neutral))
 neutral_after_fst_TESS #"16 individuals and 100 SNPs."
 
-## gosh, so glad the 100SNPS are still here 
+## Nothing is excluded- from C_fst object. the 100SNPS are still here 
 ```
 
 ```{r}

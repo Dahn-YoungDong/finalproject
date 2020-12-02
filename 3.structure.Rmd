@@ -79,6 +79,7 @@ plot(res$Q, coordinates, method = "map.max", interpol = FieldsKrigModel(10),
 dev.off()
 ```
 
+
 ```{r}
 #H. Add admixture coefficient and replace the population ID to vcf file
 Qmat_tess = as.data.frame(res$Q)
@@ -117,4 +118,22 @@ write.csv(as.data.frame(snps@meta$PopID_snmf), file= paste0("Results_Metafiles/"
 VCFsummary(snps) #16 individuals and 100 SNPs.
 ```
 
+
+Visualize spatially interpolated ancestry coefficients together with elevation map
+```{r} 
+snps_neutral = vcfLink(paste0("vcf/", project_name, "_filtered_neutral_LEA_DAPC_TESS.vcf"), overwriteID=T)
+
+par(mfrow = c(1, 2))
+par(mar = c(4, 4, .1, .1))
+plot(res$Q, coordinates, method = "map.max", interpol = FieldsKrigModel(10),
+     main = "Ancestry coefficients",cex.main=1.5,
+     xlab = "Longitude", ylab = "Latitude",cex.lab=1.3, 
+     resolution = c(700,700), cex = 1.5,
+     col.palette = my.palette)
+
+#with geo and elevation (I personally stitched and wrangled the DEM file using geospatial tools during the summer)
+DEM_base <- readRDS("./maps/rasters/DEM_base.rds")
+plot(DEM_base, col = gray.colors(20, start = 0, end = 1), ext = ext)
+points(snps_neutral@meta$longitude, snps_neutral@meta$latitude)
+```
 

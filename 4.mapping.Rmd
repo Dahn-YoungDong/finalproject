@@ -63,7 +63,7 @@ axis.x = c(-72.16100, -72.11800)
 axis.y = c(41.91700, 41.97200)
 ```
 
-###1.4. CREATING RASTER FOR THE BASE OF MAPS - HILLSHADE, SLOPE AND LANDCOVER
+###1.4. CREATING RASTER FOR THE BASE OF MAPS - ELEVATION
 ```{r eval=FALSE, include=FALSE}
 #A. Load DEM raster (elevation raster):
 #DEM = elevationLow <- readRDS("./maps/rasters/elevation.rds") ## extent didn't match so skip for now 
@@ -97,7 +97,8 @@ plot.window(xlim= axis.x, ylim= axis.y)
 
 ```{r}
 #B. Plot maps for the base
-plot(DEM_base, col = gray.colors(20, start = 0, end = 1))
+plot(DEM_base, col = gray.colors(20, start = 0, end = 1), ext = ext)
+#points(snps_neutral@meta$longitude, snps_neutral@meta$latitude)
 
 #C. Plot lat and long axes:
 #axis(1, at=seq(-72.16100, -72.11800, by=0.01))
@@ -118,91 +119,4 @@ points(df$longitude[pop_TESS_6], df$latitude[pop_TESS_6], col = 'black', bg = co
 points(df$longitude[pop_TESS_7], df$latitude[pop_TESS_7], col = 'black', bg = col_tess[7], cex = 2.5, pch=21) #POP5
 points(df$longitude[pop_TESS_8], df$latitude[pop_TESS_8], col = 'black', bg = col_tess[8], cex = 2.5, pch=21) #POP5
 points(df$longitude[pop_TESS_9], df$latitude[pop_TESS_9], col = 'black', bg = col_tess[9], cex = 2.5, pch=21) #POP5
-```
-
-#E. Plot the names of Serras in Carajás or any area names according to shapefile information
-posi_names_serra = which(!is.na(cangas$Serra2))
-lon_names_serra = coordinates(cangas)[,1][posi_names_serra]
-lat_names_serra = coordinates(cangas)[,2][posi_names_serra]
-#plot names:
-shadowtext((lon_names_serra-0.08), (lat_names_serra-0.025), cangas$Serra2[posi_names_serra], col="black", bg="white", cex=0.9, r=0.1)
-
-#F. Plot the names of localities according to vcf information in metafile
-localities = df$local_ID
-for (i in 1:length(localities)){
-  #pick the position of the first sample from that localities
-  posi_local = which(df$local_ID %in% localities[i] == TRUE)[1]
-  shadowtext((df$longitude[posi_local]+0.0), (df$latitude[posi_local]+0.0), localities[i], col="black", bg="white", cex=0.65, r=0.08, pos=4)
-}
-
-#G. Plot the legend:
-legend(x=-49.85, y=-5.85, legend = legend_tess, cex = 0.8, bty="o", bg = "white", box.col="black",  col = "black", pt.bg = col_tess, pch= 21, pt.cex=1.5)
-
-#H. Plot the scale bar:
-scalebar(10, xy=c(-50.65,-6.47), type="bar", lonlat = T, below = "Km", label = c(0,5,10), adj=c(0,-1.5), cex = 0.7)
-
-#I. Plot a north arrow:
-north.arrow(xb=-49.8, yb=-6.45, len=0.015, cex.lab=0.8, lab="N", col='black', font.sub=1)
-
-#J. Turn off pdf:
-dev.off()
-
-#------------------------------------------------------------------------------
-#                     3. Mapping Ancestry Coefficients as Pie Chart
-#------------------------------------------------------------------------------
-```{r}
-###3.2. MAPS USING TESS COEFFICIENTS
-#A. Open pdf, choose the font letters, margins and axes.
-pdf(paste0("./Results_Maps/Map_TESS_coeficients_", project_name, ".pdf"), family="Helvetica", onefile = F)
-#set parameters
-plot.new()
-# Add margins
-par(oma=c(2,2,2,2))
-# Add axes
-plot.window(xlim= axis.x, ylim= axis.y)
-
-#B. Plot maps for the base
-plotRGB(hillshade, r = 1, g = 2, b = 3, interpolate = T , ext= ext, alpha = 255, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r') #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover2,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =120, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plotRGB(landcover3,r=1, g=2, b=3, interpolate=T, ext= ext, alpha =100, bgalpha =0, stretch="lin", bty="7", axes = F, yaxs='r', xaxs='r', add=T) #stretch "lin" or "hist" are contrast and alpha (0 to 255) is brightness
-plot(cangas, add=TRUE, axes = F, bg = FALSE, bty ="n", xaxt='n', ann=FALSE, yaxt='n', lwd=1, col = "beige")
-
-#C. Plot long and lat axes:
-axis(1, at=seq(-50.7, -49.7, by=0.2),  cex.axis=1, pos=-6.5)
-axis(2, at=seq(-6.5, -5.8, by=0.2),  cex.axis=1, las=1, pos=-50.7)
-
-#D. Plot the pies charts:
-#set population names and colors. SAME THAN STEP 2!
-legend_tess
-col_tess
-#plot the pies. Z must be a matrix! Radius is the size of pies!
-names(df) #verify number of cols with ancestry information
-draw.pie(z=as.matrix(df[18:22]), x=df$longitude, y=df$latitude, radius = 0.02, col=col_tess, labels="")
-
-#E. Plot the names of Serras in Carajás or any area names according to shapefile information
-posi_names_serra = which(!is.na(cangas$Serra2))
-lon_names_serra = coordinates(cangas)[,1][posi_names_serra]
-lat_names_serra = coordinates(cangas)[,2][posi_names_serra]
-#plot names:
-shadowtext((lon_names_serra-0.08), (lat_names_serra-0.025), cangas$Serra2[posi_names_serra], col="black", bg="white", cex=0.9, r=0.1)
-
-#F. Plot the names of localities according to vcf information in metafile
-localities = df$local_ID
-for (i in 1:length(localities)){
-  #pick the position of the first sample from that localities
-  posi_local = which(df$local_ID %in% localities[i] == TRUE)[1]
-  shadowtext((df$longitude[posi_local]+0.0), (df$latitude[posi_local]+0.0), localities[i], col="black", bg="white", cex=0.65, r=0.08, pos=4)
-}
-  
-#G. Plot the legend:
-legend(x=-49.85, y=-5.85, legend = legend_tess, cex = 0.8, bty="o", bg = "white", box.col="black",  col = "black", pt.bg = col_tess, pch= 21, pt.cex=1.5)
-  
-#H. Plot the scale bar:
-scalebar(10, xy=c(-50.65,-6.47), type="bar", lonlat = T, below = "Km", label = c(0,5,10), adj=c(0,-1.5), cex = 0.7)
-  
-#I. Plot a north arrow:
-north.arrow(xb=-49.8, yb=-6.45, len=0.015, cex.lab=0.8, lab="N", col='black', font.sub=1)
-  
-#J. Turn off pdf:
-dev.off()
 ```
