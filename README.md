@@ -8,6 +8,8 @@ Look at "1.prep"" to make sense the data prepping code
 *Nov 30th*
 Finished prelim analysis. Produced an ancestry proportion graph, and a comparative plot of both spatially interpolated ancestry coefficients and population location mapped on elevation. 
 
+I will no longer consider TreeMix for this project.
+
 *Nov 24th:*
 still figuring out the structure for minimal viability analysis. 
 

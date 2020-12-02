@@ -9,14 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Each student will conduct their own phylogenetic study, which could include development of a new method, reconstructing the phylogeny of a particular group of organisms, examining the evolution of one more more characters on a phylogeny, or examination of the behavior of a particular phylogenetic method. The professor and other students will review the project as it is developed so that it can be iteratively improved, tested, and refined. At the end of the course, each student will record a video (about 10 minutes long) about the project to share with the class, and in the last days of class each student will lead a discussion of their project for 5-10 minutes. The points for the final project will not be awarded all at once, but cumulatively over the semester:
-
-5% in Week 6 for the project proposal. The project proposal consists of filling out the "Introduction and Goals" section, which specifies the question to be addressed, the methods to be applied, and the data (if any) to be considered.
-5% in Week 9 for the project minimum viable analysis, a worked example that shows how all the concepts and tools will be connected.
-10% for the recorded presentation to be shown in the last class. The recording of the presentation is due right after November recess. It is expected that this presentation covers the nearly complete project and that all major analyses are done. Presentation grade will reflect both the delivery of the material, as well as the state and quality of the work in the repository.
 15% for the completed project, due by the end of reading period. The time between the presentation and submission of the final project should be used to polish remaining small issues and to incorporate feedback provided after the the presentation.
 
-# Population tree construction and spatially-explicit admixture mapping
+# Population Genetic Structure--Ancestry Proportions of 16 individual wood frogs each sampled from a distinct pond.
 
 ## Introduction and Goals
 
@@ -24,20 +19,14 @@ Yale Myer’s Forests (YMF) in northeastern Connecticut has distributions of pop
 
 
 With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, few questions arise:
-1. how are these populations related to each other phylogenetically, 
-2. which groups are older lineages and which groups are later colonized (admixture),
-3. what is the spatial pattern of current population distribution and colonial history, and is there a clear narrative?
+1. how are these unique individuals from 16 populations related to each other? 
+2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation?
 
-My collaborator A. Z. Andis Arietta did the collection, filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 277 individual SNP sequences from 41 populations at focal site, YMF, and then three outgroup populations from New Haven Co. and Guilford Co. Connecticut. The are a few things and related methods I will need to approach my questions.
-
-1. Use program TreeMix to make inference of patterns of population splitting and mixing from genomewide allele frequency data 
-2. Spatially visualizing genetic clusters with maps of population admixture coefficients
-
-Completion of 1 would be satisfactory for my final project; inclusion of successful analysis for 2 would be well done
+My collaborator A. Z. Andis Arietta did the collection, initial filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 16 individual SNP sequences from 16 populations at focal site, YMF.
 
 ## Methods
 
-The tools I used were... See analysis files at (links to analysis files).
+I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation map of the locality, though the detailed wrangling is not shown in this project.  
 
 ## Results
 
@@ -59,10 +48,10 @@ Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient vari
 
 Skelly, D. K. (2004). Microgeographic countergradient variation in the wood frog, Rana sylvatica. Evolution 58, 160–165. doi:10.1111/j.0014-3820.2004.tb01582.x.
 
-Narasimhan, V., Danecek, P., Scally, A., Xue, Y., Tyler-Smith, C., & Durbin, R. (2016). BCFtools/RoH: a hidden Markov model approach for detecting autozygosity from next-generation sequencing data. Bioinformatics, 32(11), 1749-1751.
+The Variant Call Format and VCFtools, Petr Danecek, Adam Auton, Goncalo Abecasis, Cornelis A. Albers, Eric Banks, Mark A. DePristo, Robert Handsaker, Gerton Lunter, Gabor Marth, Stephen T. Sherry, Gilean McVean, Richard Durbin and 1000 Genomes Project Analysis Group, Bioinformatics, 2011
 
-Team, R. C. (2017). R: a language and environment for statistical computing. R Foundation for Statistical Computing, Vienna. http s. www. R-proje ct. org.
+Kevin Caye, Timo Deist, Helena Martins, Olivier Michel, Olivier Francois (2016) TESS3: fast inference of spatial population structure and genome scans for selection. Molecular Ecology Resources 16 (2), 540-548. doi: 10.1111/1755-0998.12471.
 
-Purcell, S., Neale, B., Todd-Brown, K., Thomas, L., Ferreira, M. A., Bender, D., ... & Sham, P. C. (2007). PLINK: a tool set for whole-genome association and population-based linkage analyses. The American journal of human genetics, 81(3), 559-575.
+Kevin Caye, Flora Jay, Olivier Michel, Olivier Francois. Fast Inference of Individual Admixture Coefficients Using Geographic Data. bioRxiv, 2016, doi: http://dx.doi.org/10.1101/080291
 
-Pickrell, J. K., & Pritchard, J. K. (2012). Supplementary Material for: Inference of population splits and mixtures from genome-wide allele frequency data.
+Helena Martins, Kevin Caye, Keurcien Luu, Michael GB Blum, Olivier Francois (2016). Identifying outlier loci in admixed and in continuous populations using ancestral population differentiation statistics. Molecular Ecology 25 (20), 5029-5042. doi: http://dx.doi.org/10.1101/054585.
