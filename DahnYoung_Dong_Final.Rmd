@@ -87,7 +87,7 @@ hist(PI$PI)
 HWE <- Query(snps_unind, type="hardy")
 summary(HWE$P_HWE) #Mean = 0.775 / Median = 1
 hist(HWE$P_HWE) #almost all fail to reject the null hypothesis, meaning most SNPs are at HWE, that is neutral markers under no selection
-hist(HWE$P_HWE[HWE$P_HWE<0.05]) #around 800 snps our of 18000 are out of HWE, violating some of the assumptions in HWE. Good sign that most SNPs are neutral here...
+hist(HWE$P_HWE[HWE$P_HWE<0.05]) #around 800 snps our of 18000 are significantly out of HWE, violating some of the assumptions in HWE. Good sign that most SNPs are neutral here...But ideally I want to keep only loci conforming HWE
 ```
 
 #### 1.5 add geographic info by individuals to a vcf file
@@ -107,16 +107,34 @@ head(snps_unind@meta) #verify
 
 ### 2. Load Files and Verify Data Quality 
 
-#### 2.1 FILTER DATASET BY MISSING, MIN AND MAX COVERAGE, AND HARDY-WEINBERG EQUILIBRIUM (HWE):
+#### 2.1 filter dataset by missingness, min and max coverage, and hardy-weinberg equilibrium (HWE):
 ```{r}
-#B. From dataset with all individuals, ingored minQ
-snps_fil_hwe_high <- Filter(snps_unind, filterOptions(max.missing = 0.7, min.meanDP=20, max.meanDP=500, hwe=0.7)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed).
+#From dataset with all individuals
+snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max.meanDP=500, hwe=0.7)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed) #chose hwe=0.7 to rule out all possible non-HWE loci, based on the quality check above. 
 
-
-VCFsummary(snps_fil_hwe_high)  ## 16 individuals and 10342 SNPs.
-
-#left out snps_fil_hwe_low
+VCFsummary(snps_fil)  ## 16 individuals and 9163 SNPs left.
 ```
+
+#### 2.2 filter dataset by linkage disequilibrium (LD) within contigs.
+
+```{r}
+#Define R² value:
+r2 = 0.4
+
+#remove snps with R² value
+#ld_within <- Linkage(snps_fil, type="geno-r2", linkageOptions(min.r2=r2))
+#returns a dataframe with pairwise p-values between loci, under the null hypothesis that the loci are not in linkage disequillibrium.
+
+ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
+#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
+
+head(ld_within)
+
+```
+
+
+
+
 
 ## Results
 
