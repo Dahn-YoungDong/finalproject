@@ -115,25 +115,38 @@ snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max
 VCFsummary(snps_fil)  ## 16 individuals and 9163 SNPs left.
 ```
 
-#### 2.2 filter dataset by linkage disequilibrium (LD) within contigs.
+#### 2.2 filter dataset by linkage disequilibrium (LD) between contigs.
 
 ```{r}
 #Define R² value:
-r2 = 0.4
-
-#remove snps with R² value
-#ld_within <- Linkage(snps_fil, type="geno-r2", linkageOptions(min.r2=r2))
-#returns a dataframe with pairwise p-values between loci, under the null hypothesis that the loci are not in linkage disequillibrium.
-
-ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
-#write.csv(ld_within, file=paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv"))
-
-head(ld_within)
-
+r2 = 0.7 # filtering out small degree of linked loci but still maximizing available SNPs left for analyses
+#remove snps with R²
+#ld_between <- Linkage(snps_fil, type="interchrom-geno-r2", linkageOptions(min.r2=r2))
+ld_between <- read.csv(paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv")) #load this file if it was saved before
+head(ld_between)
+hist(ld_between$R.2)
+#write.csv(ld_between, file= paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv"))
 ```
 
+```{r}
+#Select one set of the correlated snps (ID1 or ID2) # I went for ID2
+ld2_snps <- ld_between$ID2
+nold2_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld2_snps)]
+snps_fil_ldF <- Subset(snps_fil, sites=nold2_snps) # Keep snps that are not in LD.
+neutralLDBetween_SZ = capture.output(VCFsummary(snps_fil_ldF)) 
+neutralLDBetween_SZ # "16 individuals and 2796 SNPs."
+```
 
+#### 2.3 verify the quality of the filtered dataset
 
+```{r}
+site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
+HWE2 <- Query(snps_fil_ldF, type="hardy")
+
+hist(site.depth2$MEAN_DEPTH, breaks=50)
+hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
+hist(HWE2$P_HWE[HWE2$P_HWE<200])
+```
 
 
 ## Results

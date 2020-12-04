@@ -39,7 +39,7 @@ r2 = 0.4
 
 ```{r}
 #A. remove snps with R² value
-ld_within <- Linkage(snps_fil, type="geno-r2", linkageOptions(min.r2=r2)) # Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
+ld_within <- Linkage(snps_fil_hwe, type="geno-r2", linkageOptions(min.r2=r2)) # Nov 29th, 2020 # seem nothing to be removed. No SNP deviating from HW equilibrium within each pop. I guess because there is only one sample for each population.
 ld_within <- read.csv(paste0("adapt_var_mapping/Filtering/ld_within_",r2, "_hwe_test2.csv")) #load this file if it was saved before
 head(ld_within)
 #hist(ld_within$R.2)
