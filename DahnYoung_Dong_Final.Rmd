@@ -110,14 +110,17 @@ head(snps_unind@meta) #verify
 #### 2.1 filter dataset by missingness, min and max coverage, and hardy-weinberg equilibrium (HWE):
 ```{r}
 #From dataset with all individuals
-snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max.meanDP=500, hwe=0.7)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed) #chose hwe=0.7 to rule out all possible non-HWE loci, based on the quality check above. 
+snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max.meanDP=500, hwe=0.05)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed) #chose hwe=0.05 to rule out all significant non-HWE loci, based on the quality check above. 
 
-VCFsummary(snps_fil)  ## 16 individuals and 9163 SNPs left.
+VCFsummary(snps_fil)  ## 16 individuals and 12609 SNPs left.
 ```
 
 #### 2.2 filter dataset by linkage disequilibrium (LD) between contigs.
 
 ```{r}
+# review of linkage disequilibrium https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5124487/#FD1
+
+
 #Define R² value:
 r2 = 0.7 # filtering out small degree of linked loci but still maximizing available SNPs left for analyses
 #remove snps with R²
@@ -132,9 +135,9 @@ hist(ld_between$R.2)
 #Select one set of the correlated snps (ID1 or ID2) # I went for ID2
 ld2_snps <- ld_between$ID2
 nold2_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld2_snps)]
-snps_fil_ldF <- Subset(snps_fil, sites=nold2_snps) # Keep snps that are not in LD.
+snps_fil_ldF <- Subset(snps_fil, sites=nold2_snps) # Keep snps that are not in LD (excluding 6000+ SNPs, almost all of those pairwise correlations are completely 1, that means completely linked)
 neutralLDBetween_SZ = capture.output(VCFsummary(snps_fil_ldF)) 
-neutralLDBetween_SZ # "16 individuals and 2796 SNPs."
+neutralLDBetween_SZ # "16 individuals and 3658 SNPs."
 ```
 
 #### 2.3 verify the quality of the filtered dataset
@@ -145,7 +148,7 @@ HWE2 <- Query(snps_fil_ldF, type="hardy")
 
 hist(site.depth2$MEAN_DEPTH, breaks=50)
 hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
-hist(HWE2$P_HWE[HWE2$P_HWE<200])
+hist(HWE2$P_HWE[HWE2$P_HWE< 1]) # all the SNPs with <0.05 p values are excluded already. good sign
 ```
 
 
