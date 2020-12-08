@@ -2,6 +2,10 @@
 
 DahnYoung_Dong_Final is a place holder. The main content is the three markdowns 1. prep , 2. filter, and 3. structure
 
+
+*Dec 7th*
+Consolidating and finalizing all script into the finalproject markdown. When all transfer is done, the step-wise markdowns will be removed
+
 *Dec 1st*
 Look at "1.prep"" to make sense the data prepping code
 
