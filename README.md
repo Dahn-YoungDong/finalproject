@@ -1,7 +1,9 @@
 # Phylogenetic Biology - Final Project
 
-DahnYoung_Dong_Final is a place holder. The main content is the three markdowns 1. prep , 2. filter, and 3. structure
+For the full project please see, "DahnYoung_Dong_Final" markdown
 
+*Dec 8th*
+FinalProject Markdown finished. Deleted all intermediary files.
 
 *Dec 7th*
 Consolidating and finalizing all script into the finalproject markdown. When all transfer is done, the step-wise markdowns will be removed
