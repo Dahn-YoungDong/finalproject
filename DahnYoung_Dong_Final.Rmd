@@ -30,7 +30,7 @@ I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipelin
 
 I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation map of the locality, though the detailed wrangling is not shown in this project.  
 
-```{r}
+```{r include=FALSE}
 source("functions_LanGen.R") #some functions provided by the tutorial author, only used a few
 library(remotes) # R Package installation from Remote Repositories, including "GitHub"
 library(BiocManager) #Access the Bioconductor project package Repository
@@ -42,7 +42,7 @@ library(tess3r) # inference for spatial population structure
 library(maps)
 
 #set folders for results
-create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
+create_dir(c("./adapt_var_mapping/Filtering"))
 ```
 
 ### 1. Load Files and Verify Data Quality 
@@ -56,14 +56,15 @@ coords <- read.csv(coord_file)
 ```
 
 #### 1.2 Load vcf file
-```{r}
+```{r include=FALSE}
 #Creates an object of class vcfLink, which acts as an interface to a temporary VCF file. Also loads metadata (if present) associated with the samples.
 snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T)
+VCFsummary(snps_unind)
 ```
 
 #### 1.3 Verify the quality of data
 
-```{r}
+```{r include=FALSE}
 #Converts the VCF file to genotype matrix format and returns this matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
 genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
@@ -109,7 +110,7 @@ head(snps_unind@meta) #verify
 ### 2. Filter for neutral loci
 
 #### 2.1 filter dataset by missingness, min and max coverage, and hardy-weinberg equilibrium (HWE):
-```{r}
+```{r include=FALSE}
 #From dataset with all individuals
 snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max.meanDP=500, hwe=0.05)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed) #chose hwe=0.05 to rule out all significant non-HWE loci, based on the quality check above. 
 
@@ -123,16 +124,15 @@ VCFsummary(snps_fil)  ## 16 individuals and 12609 SNPs left.
 
 
 #Define R² value:
-r2 = 0.7 # filtering out small degree of linked loci but still maximizing available SNPs left for analyses
+r2 = 0.7 # filtering out most strongly correlated/linked loci but still maximizing available SNPs left for analyses
 #remove snps with R²
 #ld_between <- Linkage(snps_fil, type="interchrom-geno-r2", linkageOptions(min.r2=r2))
 ld_between <- read.csv(paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv")) #load this file if it was saved before
-head(ld_between)
-hist(ld_between$R.2)
+hist(ld_between$R.2, main = "Distribution of Linked Loci", xlab = "Strength of Linkage Disequilibrium", ylab = "Number of Loci")
 #write.csv(ld_between, file= paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv"))
 ```
 
-```{r}
+```{r include=FALSE}
 #Select one set of the correlated snps (ID1 or ID2) # I went for ID2
 ld2_snps <- ld_between$ID2
 nold2_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld2_snps)]
@@ -143,7 +143,7 @@ neutralLDBetween_SZ # "16 individuals and 3658 SNPs."
 
 #### 2.3 verify the quality of the filtered dataset
 
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
 HWE2 <- Query(snps_fil_ldF, type="hardy")
 
@@ -152,15 +152,14 @@ hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
 hist(HWE2$P_HWE[HWE2$P_HWE< 1]) # all the SNPs with <0.05 p values are excluded already. good sign
 ```
 
-
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 #Verify the real missing data per individual:
 Missing_ind <- apply(GenotypeMatrix(snps_fil_ldF),1, function(x) sum(x<0)/length(x)*100)
 summary(Missing_ind) ## no more missing individuals
 hist(Missing_ind)
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 #Verify the real missing data per locus:
 Missing <- apply(GenotypeMatrix(snps_fil_ldF), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
 summary(Missing) # no more missing locus- good sign for successful filtering above.
@@ -171,7 +170,7 @@ VCFsummary(snps_fil_ldF) ##16 individuals and 3658 SNPs. # would this change the
 ```
 
 #### 2.4. save the vcf with only neutral SNPs.
-```{r}
+```{r include=FALSE}
 Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
 ```
 
@@ -183,18 +182,21 @@ Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
 snps <- vcfLink(paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"), overwriteID=T)
 VCFsummary(snps) ##16 individuals and 3658 SNPs.
 ```
-```{r}
+```{r include=FALSE}
 #Create a Genotype matrix
 genotypes <- GenotypeMatrix(snps) # only returns biallelic
-genotypes[1:16, 3000:3030] ## -1 is missing # should have no missing because I filtered out everything and did quality check.
+genotypes[1:16, 3000:3010] ## -1 is missing # should have no missing because I filtered out everything and did quality check.
 ```
 
-```{r}
+```{r include=FALSE}
 #Create a Matrix with long and lat 
 coordinates <- snps@meta[,4:5] #added pond ID here
 class(coordinates)
 coordinates <- data.matrix(coordinates, rownames.force = NA) #force all data type into numeric
 class(coordinates)
+```
+
+```{r}
 #verify the coords
 plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
 text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.15)
@@ -210,12 +212,9 @@ Population genetic structure analysis includes three main steps:
 
 ```{r}
 #Customize parameters for the run
-lambda_values = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5) #test lambda values around 1.
 K = c(1:5) # set the number of K to be tested
-replications = 5 # number of replication in each K
 ploidy = 2 # species ploidy
 CPU = 4 #Number of cores for run in parallel
-mask = 0.05 #proportion of masked values
 ```
 
 ```{r include=FALSE}
@@ -239,7 +238,7 @@ plot(tess3.ls, pch = 19, col = "blue",
 
 ### 4. Visualizing ancestry and with geography
 
-#### 4.1 Ancestry Matrix
+#### 4.1 Ancestry Matrix in barplot of individuals
 ```{r include=FALSE}
 # retrieve tess3 Q matrix for K = 5 clusters 
 q.matrix <- qmatrix(tess3.ls, K = 5)
@@ -256,6 +255,7 @@ barplot(q.matrix, border = T, space = 0,
 axis(1, at = 0.5:nrow(q.matrix), labels = snps@meta[,3][bp$order], las = 3, cex.axis = 1)
 ```
 
+#### 4.2 Ancestry coefficients as spatial interpolations
 
 ## Discussion
 
