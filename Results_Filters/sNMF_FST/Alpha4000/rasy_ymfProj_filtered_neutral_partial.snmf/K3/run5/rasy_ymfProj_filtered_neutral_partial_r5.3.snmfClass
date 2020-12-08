@@ -1,6 +1,0 @@
-new("snmfClass", directory = "K3/run5/", snmfClass.file = "rasy_ymfProj_filtered_neutral_partial_r5.3.snmfClass", 
-    K = 3L, run = 5L, CPU = 4L, seed = 348231553L, alpha = 4000, 
-    percentage = 0.05, I = 0L, iterations = 200L, entropy = TRUE, 
-    tolerance = 1e-05, crossEntropy = 1.66028424898377, ploidy = 2L, 
-    Q.input.file = "", Q.output.file = "rasy_ymfProj_filtered_neutral_partial_r5.3.Q", 
-    G.output.file = "rasy_ymfProj_filtered_neutral_partial_r5.3.G")

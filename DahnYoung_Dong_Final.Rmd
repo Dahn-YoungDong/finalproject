@@ -6,10 +6,13 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
-15% for the completed project, due by the end of reading period. The time between the presentation and submission of the final project should be used to polish remaining small issues and to incorporate feedback provided after the the presentation.
 
 # Population Genetic Structure--Ancestry Proportions of 16 individual wood frogs each sampled from a distinct pond.
 
@@ -26,11 +29,13 @@ My collaborator A. Z. Andis Arietta did the collection, initial filter and proce
 
 ## Methods
 
+The whole run should be less than 2 minutes.
+
 I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, particularly the ones related to manipulating and visualizing genomic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure. They included 3-4 different parallel analyses and I chose TESS3 as my main analyses, which is also what the author preferred.
 
 I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation map of the locality, though the detailed wrangling is not shown in this project.  
 
-```{r include=FALSE}
+```{r}
 source("functions_LanGen.R") #some functions provided by the tutorial author, only used a few
 library(remotes) # R Package installation from Remote Repositories, including "GitHub"
 library(BiocManager) #Access the Bioconductor project package Repository
@@ -39,7 +44,8 @@ library(devtools) # Collection of package development tools.
 library(r2vcftools) # an interface that brings vcftools analyses into R
 library(LEA) # Landscape and ecological association studies
 library(tess3r) # inference for spatial population structure
-library(maps)
+library(raster) #geographic data analysis and modeling
+library(sp) #classes and methods for spatial data
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering"))
@@ -47,7 +53,7 @@ create_dir(c("./adapt_var_mapping/Filtering"))
 
 ### 1. Load Files and Verify Data Quality 
 
-#### 1.1 set up
+#### 1.1 Set up
 ```{r}
 vcf_file <- "vcf/testdata_nomissing.vcf" #biallelic SNP dataset with no missing data- from Andis Arietta 
 project_name <- "rasy_ymfProj"
@@ -56,7 +62,7 @@ coords <- read.csv(coord_file)
 ```
 
 #### 1.2 Load vcf file
-```{r include=FALSE}
+```{r}
 #Creates an object of class vcfLink, which acts as an interface to a temporary VCF file. Also loads metadata (if present) associated with the samples.
 snps_unind <-  r2vcftools::vcfLink(vcf_file, overwriteID=T)
 VCFsummary(snps_unind)
@@ -64,13 +70,13 @@ VCFsummary(snps_unind)
 
 #### 1.3 Verify the quality of data
 
-```{r include=FALSE}
+```{r}
 #Converts the VCF file to genotype matrix format and returns this matrix
 genotypes <- r2vcftools::GenotypeMatrix(snps_unind)
 genotypes[1:16, 1:10] ## -1 is missing; otherwise, gives the number of derived alleles in the genotype -- ie. a 0 and 2 are both homozygotes 
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 #specify which analyses or conversions to perform on the data that passed through all specified filters
 
 #Look at depth, quality, HWE, HE, allele frequencies, and Pi
@@ -92,7 +98,7 @@ hist(HWE$P_HWE) #almost all fail to reject the null hypothesis, meaning most SNP
 hist(HWE$P_HWE[HWE$P_HWE<0.05]) #around 800 snps our of 18000 are significantly out of HWE, violating some of the assumptions in HWE. Good sign that most SNPs are neutral here...But ideally I want to keep only loci conforming HWE
 ```
 
-#### 1.5 add geographic info by individuals to a vcf file
+#### 1.4 Add geographic info by individuals to a vcf file
 
 ```{r}
 #Add coordinates to vcf file.
@@ -109,15 +115,15 @@ head(snps_unind@meta) #verify
 
 ### 2. Filter for neutral loci
 
-#### 2.1 filter dataset by missingness, min and max coverage, and hardy-weinberg equilibrium (HWE):
-```{r include=FALSE}
+#### 2.1 Filter dataset by missingness, min and max coverage, and hardy-weinberg equilibrium (HWE):
+```{r}
 #From dataset with all individuals
 snps_fil <- Filter(snps_unind, filterOptions(max.missing = 1, min.meanDP=20, max.meanDP=500, hwe=0.05)) #max.missing---Exclude sites on the basis of the proportion of missing data (defined to be between 0 and 1, where 0 allows sites that are completely missing and 1 indicates no missing data allowed) #chose hwe=0.05 to rule out all significant non-HWE loci, based on the quality check above. 
 
 VCFsummary(snps_fil)  ## 16 individuals and 12609 SNPs left.
 ```
 
-#### 2.2 filter dataset by linkage disequilibrium (LD) between contigs.
+#### 2.2 Filter dataset by linkage disequilibrium (LD) between contigs.
 
 ```{r}
 # review of linkage disequilibrium https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5124487/#FD1
@@ -132,7 +138,7 @@ hist(ld_between$R.2, main = "Distribution of Linked Loci", xlab = "Strength of L
 #write.csv(ld_between, file= paste0("adapt_var_mapping/Filtering/ld_between_", r2, "_hwe_test2.csv"))
 ```
 
-```{r include=FALSE}
+```{r}
 #Select one set of the correlated snps (ID1 or ID2) # I went for ID2
 ld2_snps <- ld_between$ID2
 nold2_snps <- snps_fil@site_id[!(snps_fil@site_id %in% ld2_snps)]
@@ -141,9 +147,9 @@ neutralLDBetween_SZ <- capture.output(VCFsummary(snps_fil_ldF))
 neutralLDBetween_SZ # "16 individuals and 3658 SNPs."
 ```
 
-#### 2.3 verify the quality of the filtered dataset
+#### 2.3 Verify the quality of the filtered dataset
 
-```{r include=FALSE}
+```{r}
 site.depth2 <- Query(snps_fil_ldF, "site-mean-depth")
 HWE2 <- Query(snps_fil_ldF, type="hardy")
 
@@ -152,14 +158,14 @@ hist(site.depth2$MEAN_DEPTH[site.depth2$MEAN_DEPTH <200])
 hist(HWE2$P_HWE[HWE2$P_HWE< 1]) # all the SNPs with <0.05 p values are excluded already. good sign
 ```
 
-```{r include=FALSE}
+```{r}
 #Verify the real missing data per individual:
 Missing_ind <- apply(GenotypeMatrix(snps_fil_ldF),1, function(x) sum(x<0)/length(x)*100)
 summary(Missing_ind) ## no more missing individuals
 hist(Missing_ind)
 ```
 
-```{r include=FALSE}
+```{r}
 #Verify the real missing data per locus:
 Missing <- apply(GenotypeMatrix(snps_fil_ldF), 2, function(x) sum(x < 0)/length(x)*100) ## Actual percentage of missing data
 summary(Missing) # no more missing locus- good sign for successful filtering above.
@@ -169,26 +175,26 @@ VCFsummary(snps_unind) #16 individuals and 18077 SNPs.
 VCFsummary(snps_fil_ldF) ##16 individuals and 3658 SNPs. # would this change the resulting ancestry significantly? I used to have only 100 SNPs left
 ```
 
-#### 2.4. save the vcf with only neutral SNPs.
+#### 2.4. Save the vcf with only neutral SNPs.
 ```{r include=FALSE}
 Save(snps_fil_ldF, paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"))
 ```
 
 ### 3. TESS3 inference of Spatial Population Genetic Structure (https://bcm-uga.github.io/TESS3_encho_sen/articles/main-vignette.html)
 
-####3.1. input files/objects for TESS analyses
+#### 3.1. Input files/objects for TESS analyses
 ```{r}
 #Load the .VCF file with only neutral SNPs:
 snps <- vcfLink(paste0("vcf/", project_name,"_filtered_neutral_partial.vcf"), overwriteID=T)
 VCFsummary(snps) ##16 individuals and 3658 SNPs.
 ```
-```{r include=FALSE}
+```{r}
 #Create a Genotype matrix
 genotypes <- GenotypeMatrix(snps) # only returns biallelic
 genotypes[1:16, 3000:3010] ## -1 is missing # should have no missing because I filtered out everything and did quality check.
 ```
 
-```{r include=FALSE}
+```{r}
 #Create a Matrix with long and lat 
 coordinates <- snps@meta[,4:5] #added pond ID here
 class(coordinates)
@@ -202,7 +208,7 @@ plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
 text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.15)
 ```
 
-#### 3.2 running the TESS3R function
+#### 3.2 Running the TESS3R function
 
 Population genetic structure analysis includes three main steps:
 
@@ -217,7 +223,7 @@ ploidy = 2 # species ploidy
 CPU = 4 #Number of cores for run in parallel
 ```
 
-```{r include=FALSE}
+```{r}
 #Estimate ancestry coefficients
 tess3.ls <- tess3(X = genotypes, coord = coordinates, K = K, 
                    method = "projected.ls", ploidy = ploidy, openMP.core.num = CPU) 
@@ -239,23 +245,60 @@ plot(tess3.ls, pch = 19, col = "blue",
 ### 4. Visualizing ancestry and with geography
 
 #### 4.1 Ancestry Matrix in barplot of individuals
-```{r include=FALSE}
+```{r}
 # retrieve tess3 Q matrix for K = 5 clusters 
 q.matrix <- qmatrix(tess3.ls, K = 5)
 ```
 
 ```{r}
 # plot
-my.colors <- c("tomato", "orange", "lightblue", "wheat","olivedrab")
-my.palette <- CreatePalette(my.colors, 4)
+#pdf(file = "./Results_TESS/TESS_Ancestry.pdf", width = 4, height = 4)
+
+my.colors <- c(1:5)
+my.palette <- CreatePalette(my.colors, 6)
 barplot(q.matrix, border = T, space = 0, 
         main = "Ancestry matrix", 
         xlab = "Individuals", ylab = "Ancestry proportions", 
         col.palette = my.palette) -> bp
 axis(1, at = 0.5:nrow(q.matrix), labels = snps@meta[,3][bp$order], las = 3, cex.axis = 1)
+
+#dev.off()	
 ```
 
 #### 4.2 Ancestry coefficients as spatial interpolations
+
+```{r}
+#prepping objects to plot
+DEM_base <- readRDS("./maps/rasters/DEM_base.rds")
+ext = extent(-72.16100, -72.11800, 41.91700, 41.97200)
+river <- raster::shapefile("./maps/vectors/rivers.shp")
+river <- spTransform(river, DEM_base@crs)
+river <- crop(river, ext)
+
+```
+
+```{r}
+#display interpolated values of ancestry coefficients on geographic maps
+
+#pdf("./Results_TESS/TESS_MAP.pdf")
+
+par(mfrow = c(1, 2))
+par(mar = c(4, 3, 2, 5))
+
+plot(x= q.matrix, coord = coordinates, method = "map.max", interpol = FieldsKrigModel(10),
+     main = "Ancestry coefficients",
+     xlab = "Longitude", ylab = "Latitude",cex.lab=1.3,
+     resolution = c(1000,1000), cex = 1.5,
+     col.palette = my.palette)
+text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.3)
+
+#with geo and elevation (I personally stitched and wrangled the DEM file using geospatial tools during the summer)
+plot(DEM_base, col = gray.colors(20, start = 0, end = 1), ext = ext, main = "Elevation and Major rivers", cex.lab=1.3, cex = 1.5)
+points(snps@meta$longitude, snps@meta$latitude, pch = 20, col = "red")
+text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.3, col = "red")
+plot(river, add = TRUE, ext = ext)
+#dev.off()
+```
 
 ## Discussion
 
