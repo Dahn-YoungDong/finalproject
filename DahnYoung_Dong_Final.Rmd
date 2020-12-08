@@ -39,6 +39,7 @@ library(devtools) # Collection of package development tools.
 library(r2vcftools) # an interface that brings vcftools analyses into R
 library(LEA) # Landscape and ecological association studies
 library(tess3r) # inference for spatial population structure
+library(maps)
 
 #set folders for results
 create_dir(c("./adapt_var_mapping/Filtering", "./Results_Metafiles", "./Results_Filters/PCA", "./Results_Filters/PCadapt_FST", "./Results_Filters/sNMF_FST", "./Results_Filters/TESS_FST"))
@@ -197,7 +198,6 @@ class(coordinates)
 #verify the coords
 plot(coordinates, pch = 19, cex = .5, xlab = "Longitude", ylab = "Latitude")
 text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.15)
-
 ```
 
 #### 3.2 running the TESS3R function
@@ -208,10 +208,54 @@ Population genetic structure analysis includes three main steps:
 2.choosing the number of ancestral populations or genetic clusters,
 3.showing bar-plots of ancestry coefficients or displaying them on geographic maps.
 
+```{r}
+#Customize parameters for the run
+lambda_values = c(0, 0.25, 0.5, 0.75, 1, 1.25, 1.5) #test lambda values around 1.
+K = c(1:5) # set the number of K to be tested
+replications = 5 # number of replication in each K
+ploidy = 2 # species ploidy
+CPU = 4 #Number of cores for run in parallel
+mask = 0.05 #proportion of masked values
+```
+
+```{r include=FALSE}
+#Estimate ancestry coefficients
+tess3.ls <- tess3(X = genotypes, coord = coordinates, K = K, 
+                   method = "projected.ls", ploidy = ploidy, openMP.core.num = CPU) 
+```
+
+```{r}
+#to choose best K, generates a plot for root mean-squared errors computed on a subset of loci used for cross-validation.
+plot(tess3.ls, pch = 19, col = "blue",
+     xlab = "Number of ancestral populations",
+     ylab = "Cross-validation score")
+
+#Smaller values of the cross-validation criterion mean better runs. The best choice for the K value is when the cross-validation curve exhibits a plateau or starts increasing.
+
+# here suggests best K value is 5
+```
 
 ## Results
 
-The tree in Figure 1...
+### 4. Visualizing ancestry and with geography
+
+#### 4.1 Ancestry Matrix
+```{r include=FALSE}
+# retrieve tess3 Q matrix for K = 5 clusters 
+q.matrix <- qmatrix(tess3.ls, K = 5)
+```
+
+```{r}
+# plot
+my.colors <- c("tomato", "orange", "lightblue", "wheat","olivedrab")
+my.palette <- CreatePalette(my.colors, 4)
+barplot(q.matrix, border = T, space = 0, 
+        main = "Ancestry matrix", 
+        xlab = "Individuals", ylab = "Ancestry proportions", 
+        col.palette = my.palette) -> bp
+axis(1, at = 0.5:nrow(q.matrix), labels = snps@meta[,3][bp$order], las = 3, cex.axis = 1)
+```
+
 
 ## Discussion
 
