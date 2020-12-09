@@ -333,11 +333,8 @@ plot(tess3.ls, pch = 19, col = "blue",
 
 ### 5.5 Ancestry mapping is exploratory without testing underlying mechanisms
 
-### 5.5 Elevation and river systems correlate with large scale patterns but not minor differentiations as K increases
+### 5.6 Elevation and river systems correlate with large scale patterns but not minor differentiations as K increases
 
-The biggest difficulty in implementing these analyses was...
-
-If I did these analyses again, I would...
 
 ## References
 
@@ -352,5 +349,3 @@ The Variant Call Format and VCFtools, Petr Danecek, Adam Auton, Goncalo Abecasis
 Kevin Caye, Timo Deist, Helena Martins, Olivier Michel, Olivier Francois (2016) TESS3: fast inference of spatial population structure and genome scans for selection. Molecular Ecology Resources 16 (2), 540-548. doi: 10.1111/1755-0998.12471.
 
 Kevin Caye, Flora Jay, Olivier Michel, Olivier Francois. Fast Inference of Individual Admixture Coefficients Using Geographic Data. bioRxiv, 2016, doi: http://dx.doi.org/10.1101/080291
-
-Helena Martins, Kevin Caye, Keurcien Luu, Michael GB Blum, Olivier Francois (2016). Identifying outlier loci in admixed and in continuous populations using ancestral population differentiation statistics. Molecular Ecology 25 (20), 5029-5042. doi: http://dx.doi.org/10.1101/054585.
