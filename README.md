@@ -2,6 +2,9 @@
 
 For the full project please see, "DahnYoung_Dong_Final" markdown
 
+*Dec 9th*
+Start write the results and discussion based on comparing different K values.
+
 *Dec 8th*
 FinalProject Markdown finished. Deleted all intermediary files.
 
