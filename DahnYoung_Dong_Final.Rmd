@@ -253,7 +253,7 @@ q.matrix <- qmatrix(tess3.ls, K = 2)
 
 ```{r}
 # plot
-#pdf(file = "./Results_TESS/TESS_Ancestry.pdf", width = 4, height = 4)
+#pdf(file = "./Results_TESS/TESS_Ancestry_K?.pdf", width = 4, height = 4)
 
 my.colors <- c("red","yellow","green","purple","turquoise", "blue")
 my.palette <- CreatePalette(my.colors, 6)
@@ -281,7 +281,7 @@ river <- crop(river, ext)
 ```{r}
 #display interpolated values of ancestry coefficients on geographic maps
 
-#pdf("./Results_TESS/TESS_MAP.pdf")
+#pdf("./Results_TESS/TESS_MAP_K?.pdf")
 
 par(mfrow = c(1, 2))
 par(mar = c(4, 3, 2, 5))
