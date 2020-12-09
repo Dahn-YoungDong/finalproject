@@ -21,19 +21,25 @@ knitr::opts_chunk$set(
 Yale Myer’s Forests (YMF) in northeastern Connecticut has distributions of populations of wood frogs (*Rana sylvatica*), and Skelly's lab has been recording long-term population dynamics, phenotypic and abiotic environment data that show rapid evolution is occurring (Freidenburg and Skelly, 2004; Skelly, 2004; Ligon and Skelly, 2009). That is, the populations are diverging in their physiological and morphological traits based on the local environments over generations. What requires to substantiate this ecological observation further is to explore the genetics. Previous effort to study microsatellite markers have not been successful in showing the population divergence or clustering at such microgeographical scale. 
 
 
-With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, few questions arise:
-1. how are these unique individuals from 16 populations related to each other? 
-2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation?
+With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, we can know start to explore the neutral and adaptive genetic variations over the landscape. Given the pilot data of 16 individuals/genotypes, I would like to know about the standing microgeographic genetic variation:
 
-My collaborator A. Z. Andis Arietta did the collection, initial filter and processing of the genomic data. And a VCF file with post-processed genomic data is available for use. The dataset contains 16 individual SNP sequences from 16 populations at focal site, YMF.
+1. how are these 16 unique individuals from 16 populations related to each other by their ancestry (shared allelic frequencies across the genome by inheritance)? 
+2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation and river system (visual interpolations and comparisons)?
+
+My collaborator A. Z. Andis Arietta did the collection, ipyrad processing of the genomic data. For the pilot dataset, in addition, he filtered the SNPs data so that there is no missing data across loci or individual samples.https://github.com/laninsky/GBS_SNP_filter
+
+The pilot dataset is a VCF file with post-processed genomic data. I used this file for the project. The dataset contains 16 wood frog individuals' SNP biallelic sequences, each from one distinct pond population at the focal site, YMF.
+
 
 ## Methods
 
-The whole run should be less than 2 minutes.
+The whole run should be less than 2 minutes (some chunks are quoted out).
 
 I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, particularly the ones related to manipulating and visualizing genomic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure. They included 3-4 different parallel analyses and I chose TESS3 as my main analyses, which is also what the author preferred.
 
-I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation map of the locality, though the detailed wrangling is not shown in this project.  
+I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation and raster map of the location, though the detailed wrangling is not shown in this project. 
+
+TESS3 uses model-free, individual based, geographically constrained least-squares algorithm for calculating ancestry coefficient, different from Bayesian algorithm that uses MCMC posteriors, which increases computational speed in larger genotype matrices without compromising accuracy (Caye et al. 2016). 
 
 ```{r}
 source("functions_LanGen.R") #some functions provided by the tutorial author, only used a few
