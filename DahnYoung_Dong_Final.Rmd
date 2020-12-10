@@ -21,19 +21,20 @@ knitr::opts_chunk$set(
 Yale Myer’s Forests (YMF) in northeastern Connecticut has distributions of populations of wood frogs (*Rana sylvatica*), and Skelly's lab has been recording long-term population dynamics, phenotypic and abiotic environment data that show rapid evolution is occurring (Freidenburg and Skelly, 2004; Skelly, 2004; Ligon and Skelly, 2009). That is, the populations are diverging in their physiological and morphological traits based on the local environments over generations. What requires to substantiate this ecological observation further is to explore the genetics. Previous effort to study microsatellite markers have not been successful in showing the population divergence or clustering at such microgeographical scale. 
 
 
-With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, we can know start to explore the neutral and adaptive genetic variations over the landscape. Given the pilot data of 16 individuals/genotypes, I would like to know about the standing microgeographic genetic variation:
+With the availability of genome-wide SNPs for a few dozens of populations of *Rana sylvatica* from the year of 2018, and the understanding of presumably genetic-based and non-plastic local adaptations for populations that are physically in proximity to each other, we can now start to explore the neutral and adaptive genetic variations over the landscape. Given the pilot data of 16 individuals/genotypes, I would like to know about its standing microgeographic genetic variation.
+
+Two questions I want to find answers for:
 
 1. how are these 16 unique individuals from 16 populations related to each other by their ancestry (shared allelic frequencies across the genome by inheritance)? 
-2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation and river system (visual interpolations and comparisons)?
+2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation and river system (visual interpolations and comparisons)? I hypothesize that the river and elevation would partition the populations into two, due to isolation by resistance (Richardson, Urban 2012).
 
 My collaborator A. Z. Andis Arietta did the collection, ipyrad processing of the genomic data. For the pilot dataset, in addition, he filtered the SNPs data so that there is no missing data across loci or individual samples.https://github.com/laninsky/GBS_SNP_filter
 
 The pilot dataset is a VCF file with post-processed genomic data. I used this file for the project. The dataset contains 16 wood frog individuals' SNP biallelic sequences, each from one distinct pond population at the focal site, YMF.
 
-
 ## Methods
 
-The whole run should be less than 2 minutes (some chunks are quoted out).
+The whole run should be less than 1 minutes (some chunks are quoted out).
 
 I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, particularly the ones related to manipulating and visualizing genomic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure. They included 3-4 different parallel analyses and I chose TESS3 as my main analyses, which is also what the author preferred.
 
@@ -305,27 +306,65 @@ plot(tess3.ls, pch = 19, col = "blue",
 
 #### 4.3 Comparing results of different K values (might not be useful)
 
+Due to the stochastic nature of tess3 function that generated the matrices for these graphs (likely due to small individual sample size and number of loci), the root mean square errors is huge. And each iteration produces different results. See 5.5. So the results might not be interpretable. Based on Caye et al. 2016 Figure 1, the function becomes more reliable when sample size is larger then 200 and loci larger than 50000. Where my dataset is a magnitude smaller than the recommended.
+
+The assignment of colors among different K values are random. 
+
+```{r}
+# root mean squared error
+tess3.ls[[2]]$rmse
+```
+The following results are here to demonstrate my work, though they are not reliable.  
+
 ##### 4.3.1 Results when K = 2  
 
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K2.jpeg)
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K2.jpeg)
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K2.jpeg)  
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K2.jpeg)  
+This graph shows that two clear ancestry assignments align with the valley-plataeu- ravine system. With  admixture around W1, WP, and SH populations.
 
 ##### 4.3.2 Results when K = 4  
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K4.jpeg)
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K4.jpeg)
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K4.jpeg)  
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K4.jpeg)  
+When presumed ancestry number is four, we see higher degree of admixture in all individuals, while ancestry structuring are still generally separated by elevation and river. Though additional partitioning appeared at northeast corner.  
+
 ##### 4.3.3 Results when K = 6  
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K6.jpeg)
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K6.jpeg)
+
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K6.jpeg)  
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K6.jpeg)  
+
+When ancestry assigned at 6, the admixture signature lessened, and more individuals fall into one single ancestry.The ancestry signal due to isolation by resistance from valley and river system is lost. The ancestry needs further variables to explain, which the current model doesn't capture.
 
 ## Discussion
 
-### 5.1 Loading file using the Tutorial takes extra steps
+### 5.1 Answers to the two questions set out in the introduction
 
-### 5.2 Very data quality necessitates understanding 
+Because of the stochastic results in the ancestry coefficient due to small sample sizes, the results might not be interpretable. Here is just to demonstrate my work. 
 
-### 5.3 Correct SNPs filtering is based on quality check
+**1. how are these 16 unique individuals from 16 populations related to each other by their ancestry (shared allelic frequencies across the genome by inheritance)?**
 
-### 5.4 Ancestry proportion assignment in my research is stochastic, and is K dependent
+The best K would be 16, that means all 16 individuals have their own ancestry lineage and none of them cluster. But the best K cross-validation value decreases almost linearly when K increases, so there is no reasonable optimal K assignment from 1 <= K <= 16.
+
+For the interest of the final project's hypothesis with the elevation and river systems which separate the area visually by two halves, I assigned the value to K=2. The spatial ancestry interpolation largely conforms to the elevation and river system as the barrier for gene flow (section 4.3.1). 
+
+**2. qualitatively, how much correspondence is there between the individuals genetic ancestry to environmental variables, such as elevation and river system (visual interpolations and comparisons)? I hypothesize that the river and elevation would partition the populations into two, due to isolation by resistance.**
+
+The correspondence is strong between the ancestries and the geographic barriers of river and elevation difference (section 4.3.1) when K ancestry assignment is 2. This suggests that these environmental variables can explain overall ancestry. When K increases, as seen in 4.3.2 and 4.3.3, we see the ancestry starts to partition in a way that is not associated with the broad pattern of elevation and geography. Other patterns such as local adaptation might be at play but adaptive loci have been filtered out in my case.
+
+### 5.2 Loading file and running scripts using the Tutorial takes extra steps
+
+To run tess3r and r2vcftools, it requires some development tools and dependencies that configure my computer. The time to create the right environment to run the tutorial scripts is time-consuming. Besides, the tutorial is written for different audiences who look for different methods to apply, so it is like an encyclopedia. I can not simply replicate and run with my data. It takes time to look through the script, pick the chunks that I need and adapt to my circumstance. This also takes a while and sometimes might render some analyses not available.
+
+Lastly, I originally wanted to use the whole dataset (300+ individuals) for the analyses. But each chunk take too long to run, and the developmental stage that requires trial and error would be impossible if I go with the full dataset. So, essential the final project is a complete version of "minimal viability analysis." Next step would be to run the code with the full dataset. 
+
+### 5.3 Very data quality necessitates understanding 
+
+Upstream SNPs data filtering is essential for ancestry assignment. We want to build ancestry based on the neutral variation of populations due to gene flow and drift. My collaborator Andis filtered out only missingness and I still needed to the rest of the filtering. Genotype matrix is good for visually examining the heterozygosity of the data across different regions, and whether there is remaining missing data. Site depths determine the trustworthiness of the loci data. Necleotide diversity per site is a good measurement for amount of useful variation for all loci. Hardy Weinberg Equilibrium is good to assess amount of non-neutral variations there are in the SNPs.
+
+### 5.4 Correct SNPs filtering is based on quality check
+
+Meanwhile, we want to filter out the regions that are under selection and physical linkage. So quality check and applying appropriate filtering threshold is critical. It took me a while to carefully look through the methods of each quality check, understand them, and filter my SNPs accordingly. I don't have a reference number to draw the line of which threshold is good enough, so I'm not sure if I over-filtered or under-filtered. I started out with 18k SNPs, but left with about 3500 SNPs. And the limited number of SNPs also rendered the TESS analyses not accurate (section 5.5).
+
+### 5.5 Ancestry proportion assignment in my research is stochastic, and is K dependent
 ```{r eval=FALSE, include=FALSE}
 it <- 100
 out <-matrix(NA, 16 ,it)
@@ -345,23 +384,29 @@ hist(out[i,], main = i, xlab = NULL, ylab = NULL)
 }
 ```
 
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/simulation.png)
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/simulation.png)  
 
-### 5.5 Ancestry mapping is exploratory without testing underlying mechanisms
+For the same K assignment, such as K=2, every ancestry coefficient run returns a difference result, which lead to unreliable ancestry proportion calculation and assignment. As the result above shows, each parallel run under the same parameters, return different ancestry probability, and most of them are bimodal, meaning that the ancestry is extremely vague. For example, for individual 14, about 50% of the time within the 100 iterations it belongs to ancestor cluster 1 and 50% of the time cluster 2. This pattern holds strongly in almost all other individuals across the 100 iterations. This suggests the tess ancestry proportion calculation based on 16 individual and 3658 SNPS is not reliable. When individual sample size is larger than 200 and SNPs more than 25000 should we expect stable results from this analyses (Caye et al. 2016). My full dataset has 350 individuals and potentially more SNPs if I allow more flexibility in shallow site depth, Hardy Weinberg Disequilibrium and Linkage Disequilibrium. 
 
-### 5.6 Elevation and river systems correlate with large scale patterns but not minor differentiations as K increases
+### 5.6 Ancestry mapping is exploratory without testing underlying mechanisms
 
+Spatial Ancestry mapping tells me to which spatial extents the individuals with similar genetic composition dominate the landscape based on the coalescence. The spatial components here only included the coordinates, and the extent of ancestry is limited by nearest neighbor graphs. This excludes the possibility that far-away individuals can be closely related due to ancestry. Also, I didn't include the environmental heterogeneity into the analyses so I can not test the correlation between elevation + river system and ancestry. Overall, I can not know which factors contributed to the separation of ancestry besides saying that there is a correspondence between elevation/river system and ancestry. Further analyses on landscape resistance by including raster type environmental datasets and associating them with the genotype matrix can test actual relations between genetics and environemnt.
 
 ## References
 
+*Background:*  
 Freidenburg, L. K., and Skelly, D. K. (2004). Microgeographical variation in thermal preference by an amphibian. Ecol. Lett. 7, 369–373. doi:10.1111/j.1461-0248.2004.00587.x.
 
 Ligon, N. F., and Skelly, D. K. (2009). Cryptic divergence: countergradient variation in the wood frog. Evol. Ecol. Res. 11, 1099–1109. http://www.evolutionary-ecology.com/issues/v11/n07/jjar2510.pdf
 
 Skelly, D. K. (2004). Microgeographic countergradient variation in the wood frog, Rana sylvatica. Evolution 58, 160–165. doi:10.1111/j.0014-3820.2004.tb01582.x.
 
+Richardson, J. L. 2012. Divergent landscape effects on population connectivity in two co-occurring amphibian species: divergent landscape effects on two amphibians. Molecular Ecology 21:4437–4451.
+
+*VCFTOOLS:*  
 The Variant Call Format and VCFtools, Petr Danecek, Adam Auton, Goncalo Abecasis, Cornelis A. Albers, Eric Banks, Mark A. DePristo, Robert Handsaker, Gerton Lunter, Gabor Marth, Stephen T. Sherry, Gilean McVean, Richard Durbin and 1000 Genomes Project Analysis Group, Bioinformatics, 2011
 
+*TESS3R:*  
 Kevin Caye, Timo Deist, Helena Martins, Olivier Michel, Olivier Francois (2016) TESS3: fast inference of spatial population structure and genome scans for selection. Molecular Ecology Resources 16 (2), 540-548. doi: 10.1111/1755-0998.12471.
 
 Kevin Caye, Flora Jay, Olivier Michel, Olivier Francois. Fast Inference of Individual Admixture Coefficients Using Geographic Data. bioRxiv, 2016, doi: http://dx.doi.org/10.1101/080291
