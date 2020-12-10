@@ -37,7 +37,7 @@ The whole run should be less than 2 minutes (some chunks are quoted out).
 
 I closely follow the scripts from https://github.com/jdalapicolla/LanGen_pipeline_version2, particularly the ones related to manipulating and visualizing genomic data given spatial coordinates--- 1.1 filtering SNPS and 1.2 genetic structure. They included 3-4 different parallel analyses and I chose TESS3 as my main analyses, which is also what the author preferred.
 
-I used VCFtools, a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation and raster map of the location, though the detailed wrangling is not shown in this project. 
+I used VCFtools(Danecek et al. 2011), a linux tool, interactively linked through "r2vcftools" package in R. This is for manipulating genomic data in VCF format. I also used "TESS3R" to analyze population structure, produce ancestry proportions and spatial mapping. Lastly, I used package "sp" to create an elevation and raster map of the location, though the detailed wrangling is not shown in this project. 
 
 TESS3 uses model-free, individual based, geographically constrained least-squares algorithm for calculating ancestry coefficient, different from Bayesian algorithm that uses MCMC posteriors, which increases computational speed in larger genotype matrices without compromising accuracy (Caye et al. 2016). 
 
@@ -231,7 +231,7 @@ CPU = 4 #Number of cores for run in parallel
 
 ```{r}
 #Estimate ancestry coefficients
-set.seed(1)
+#set.seed(1)
 tess3.ls <- tess3(X = genotypes, coord = coordinates, K = K, 
                    method = "projected.ls", ploidy = ploidy, openMP.core.num = CPU) 
 ```
@@ -278,7 +278,6 @@ plot(tess3.ls, pch = 19, col = "blue",
 #river <- raster::shapefile("./maps/vectors/rivers.shp")
 #river <- spTransform(river, DEM_base@crs)
 #river <- crop(river, ext)
-
 ```
 
 ```{r}
@@ -290,10 +289,10 @@ plot(tess3.ls, pch = 19, col = "blue",
 #par(mar = c(4, 3, 2, 5))
 
 #plot(x = q.matrix, coord = coordinates, method = "map.max", interpol = FieldsKrigModel(10),
-     #main = "Ancestry coefficients",
-     #xlab = "Longitude", ylab = "Latitude",cex.lab=1,
-     #resolution = c(700,700), cex = 1,
-     #col.palette = my.palette)
+    # main = "Ancestry coefficients",
+    # xlab = "Longitude", ylab = "Latitude",cex.lab=1,
+    # resolution = c(700,700), cex = 1,
+    # col.palette = my.palette)
 #text(coordinates, labels=snps@meta[,3],data=snps@meta, cex=0.9, font=2, pos = 4, offset = 0.3)
 
 #with geo and elevation (I personally stitched and wrangled the DEM file using geospatial tools during the summer)
@@ -304,26 +303,17 @@ plot(tess3.ls, pch = 19, col = "blue",
 #dev.off()
 ```
 
-#### 4.3 Comparing results of different K values
+#### 4.3 Comparing results of different K values (might not be useful)
 
 ##### 4.3.1 Results when K = 2  
 
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K2.jpeg)
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K2.jpeg)
 
-##### 4.3.2 Results when K = 3  
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K3.jpeg)
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K3.jpeg)
-
-##### 4.3.3 Results when K = 4  
+##### 4.3.2 Results when K = 4  
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K4.jpeg)
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K4.jpeg)
-
-##### 4.3.4 Results when K = 5  
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K5.jpeg)
-![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K5.jpeg)
-
-##### 4.3.5 Results when K = 6  
+##### 4.3.3 Results when K = 6  
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_Ancestry_K6.jpeg)
 ![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/TESS_MAP_K6.jpeg)
 
@@ -335,7 +325,27 @@ plot(tess3.ls, pch = 19, col = "blue",
 
 ### 5.3 Correct SNPs filtering is based on quality check
 
-### 5.4 Ancestry proportion is K dependent
+### 5.4 Ancestry proportion assignment in my research is stochastic, and is K dependent
+```{r eval=FALSE, include=FALSE}
+it <- 100
+out <-matrix(NA, 16 ,it)
+
+for (i in 1:it){
+tess3.ls <- tess3(X = genotypes, coord = coordinates, K = 2, 
+                   method = "projected.ls", ploidy = 2, openMP.core.num = 4) 
+q.matrix <- qmatrix(tess3.ls, K = 2)
+out[,i]=q.matrix[,1]
+}
+```
+
+```{r eval=FALSE, include=FALSE}
+par(mfrow=c(4,4))
+for (i in 1:16){
+hist(out[i,], main = i, xlab = NULL, ylab = NULL)
+}
+```
+
+![nothing](/Users/danyangdong/Documents/GitHub/finalproject/Results_TESS/simulation.png)
 
 ### 5.5 Ancestry mapping is exploratory without testing underlying mechanisms
 
