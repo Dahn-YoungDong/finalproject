@@ -1,6 +1,10 @@
 # Phylogenetic Biology - Final Project
 
-For the full project please see, "DahnYoung_Dong_Final" markdown
+For the full project please see, "DahnYoung_Dong_Final" markdown and the knitted html/pdf (pdf document not formatted well so I recommend look at html or knit the final md yourself).
+Markdown link is here https://github.com/Dahn-YoungDong/finalproject/blob/master/DahnYoung_Dong_Final.Rmd
+
+*Dec 10th* 
+Final Project write-up is done. Noted for the caveat in data interpretation due to small sample size.
 
 *Dec 9th*
 Start write the results and discussion based on comparing different K values.

@@ -2,7 +2,9 @@
 title: "Dahn-Young Dong Final Project"
 author: "Dahn-Young Dong"
 date: "9/27/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
